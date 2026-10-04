@@ -325,6 +325,25 @@ func _check_enemy_contact():
             game_over = true
             player.set_physics_process(false)
 
+
+func _complete_world1_level(next_position):
+    if world1_level_completed:
+        return
+    world1_level_completed = true
+    if world1_level < world1_level_count:
+        world1_level += 1
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = next_position
+        player.velocity = Vector2.ZERO
+    _start_dialogue("STIKMAN", [
+        "Lo que encontre aqui no termina en esta zona.",
+        "La pista continua justo delante.",
+        "Tengo que seguir antes de que vuelva a desaparecer."
+    ])
+    world1_level_completed = false
+    update()
+
 func _check_world1_progress():
     var player = get_node_or_null("Stikman")
     if player == null:
