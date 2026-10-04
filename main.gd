@@ -41,7 +41,20 @@ var world1_underground_lever_activated = false
 var world1_underground_generator_activated = false
 var world1_underground_gate_body = null
 var world1_underground_gate_shape = null
+var world1_box_body = null
+var world1_box_shape = null
 var world1_door_body = null
+
+# Campaña del Mundo 1: 20 subniveles conectados
+var world1_level = 1
+var world1_level_count = 20
+var world1_level_titles = [
+    "La ciudad vacia", "La primera señal", "La estación apagada", "El camino bloqueado", "La puerta cerrada",
+    "La llave perdida", "El interruptor", "La caja extraña", "La plataforma", "La señal desconocida",
+    "El conducto", "La instalación subterranea", "La maquina desviadora", "La ruta oculta", "La ciudad en alerta",
+    "El rastro", "La persecución", "La entrada final", "La antesala", "El guardian de la ciudad"
+]
+var world1_level_completed = false
 var world1_door_shape = null
 var elapsed = 0.0
 var message_timer = 0.0
@@ -91,6 +104,7 @@ func _ready():
     _create_exit()
     _create_world1_door()
     _create_world1_platform()
+    _create_world1_box()
     _create_world1_underground_zone()
     _update_ui()
     update()
@@ -102,7 +116,9 @@ func _process(delta):
         _check_world1_rooftop()
         _check_world1_mystery_clue()
         _check_world1_mystery_destination()
-        _check_world1_underground()
+        # Si el dialogo se activo este mismo frame, no encadenamos otra transición.
+        if not dialogue_active:
+            _check_world1_underground()
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -492,15 +508,21 @@ func _update_world1_environment(delta):
     if player == null:
         return
 
-    # Caja empujable: sirve para mantener presionado un interruptor.
-    if not world1_box_moved:
-        if abs(player.position.x - world1_box_position.x) < 48 and abs(player.position.y - 350) < 90:
-            if player.position.x < world1_box_position.x:
-                world1_box_position.x += 65 * delta
-            else:
-                world1_box_position.x -= 65 * delta
-            world1_box_moved = true
-            if not dialogue_active:
+    # Caja empujable: ahora tiene colision real y puede moverse mas de una vez.
+    if world1_box_body != null:
+        world1_box_position = world1_box_body.position
+    if abs(player.position.x - world1_box_position.x) < 58 and abs(player.position.y - 350) < 95:
+        var push_direction = sign(player.position.x - world1_box_position.x)
+        if push_direction == 0:
+            push_direction = 1
+        if abs(player.velocity.x) > 5:
+            var new_box_x = clamp(world1_box_position.x + push_direction * abs(player.velocity.x) * delta, 1660, 2025)
+            world1_box_position.x = new_box_x
+            if world1_box_body != null:
+                world1_box_body.position = world1_box_position
+            if not world1_box_moved:
+                world1_box_moved = true
+            if not dialogue_active and world1_box_moved:
                 _start_dialogue("STIKMAN", [
                     "Esta caja se puede mover...",
                     "¿Por que alguien dejaria esto justo aqui?",
@@ -818,6 +840,20 @@ func _create_coins():
 
         area.connect("body_entered", self, "_on_collectible_body_entered", [area])
 
+func _create_world1_box():
+    world1_box_body = KinematicBody2D.new()
+    world1_box_body.name = "CajaInteractiva"
+    world1_box_body.position = world1_box_position
+    world1_box_body.collision_layer = 1
+    world1_box_body.collision_mask = 1
+    add_child(world1_box_body)
+
+    world1_box_shape = CollisionShape2D.new()
+    var box_rect = RectangleShape2D.new()
+    box_rect.extents = Vector2(38, 24)
+    world1_box_shape.shape = box_rect
+    world1_box_body.add_child(world1_box_shape)
+
 func _create_world1_platform():
     world1_platform_body = KinematicBody2D.new()
     world1_platform_body.name = "PlataformaMovil"
@@ -970,7 +1006,7 @@ func _update_ui():
         return
 
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
-    hud.get_node("World").text = "MUNDO 1: CONDUCTO SUBTERRANEO" if world1_underground_mode else ("MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA")
+    hud.get_node("World").text = "MUNDO 1 • NIVEL %d/20: %s" % [world1_level, world1_level_titles[world1_level - 1]] if world1_mode else "PROLOGO: LA SELVA"
     if world1_mode:
         var activated_count = 0
         for activated in world1_terminal_activated:
@@ -980,6 +1016,8 @@ func _update_ui():
     else:
         hud.get_node("Stats").text = "VIDA: %d/3     CRISTALES: %d/%d" % [health, coins, coin_positions.size()]
     hud.get_node("Timer").text = "TIEMPO: %02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
+    if world1_mode and world1_level_completed:
+        hud.get_node("Message").text = "NIVEL %d COMPLETADO\nPREPARANDO LA SIGUIENTE PARTE DE LA HISTORIA" % world1_level
 
     if game_over:
         hud.get_node("Message").text = "HAS CAIDO EN LA SELVA\nPulsa F5 para volver a intentarlo"
