@@ -34,6 +34,8 @@ var world1_rooftop_message_shown = false
 var world1_mystery_signal_found = false
 var world1_mystery_clue_collected = false
 var world1_mystery_clue_position = Vector2(2635, 220)
+var world1_mystery_destination_found = false
+var world1_mystery_destination_position = Vector2(3150, 285)
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -93,6 +95,7 @@ func _process(delta):
         _update_world1_environment(delta)
         _check_world1_rooftop()
         _check_world1_mystery_clue()
+        _check_world1_mystery_destination()
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -361,6 +364,21 @@ func _check_world1_interactions():
         world1_switch_activated = true
         message_timer = 1.5
         _update_ui()
+        update()
+
+func _check_world1_mystery_destination():
+    var player = get_node_or_null("Stikman")
+    if player == null or not world1_mystery_clue_collected or world1_mystery_destination_found:
+        return
+    if player.position.distance_to(world1_mystery_destination_position) < 75:
+        world1_mystery_destination_found = true
+        message_timer = 3.0
+        _start_dialogue("STIKMAN", [
+            "La señal termina aqui...",
+            "Hay un conducto subterraneo conectado al sistema.",
+            "Alguien envio la energia hacia abajo.",
+            "Si sigo este conducto, tal vez encuentre la fuente."
+        ])
         update()
 
 func _check_world1_mystery_clue():
@@ -634,6 +652,14 @@ func _draw_world1():
         if not world1_mystery_clue_collected:
             draw_arc(Vector2(2635, 220), 28 + sin(elapsed * 4) * 4, 0, PI * 2, 24, Color("#d8fbff"), 2)
         draw_string(Control.new().get_theme_default_font(), Vector2(2420, 230), "SEÑAL DESCONOCIDA", Color("#d8fbff"))
+
+    # Destino de la cuarta señal: entrada al conducto.
+    if world1_mystery_clue_collected:
+        draw_rect(Rect2(3070, 270, 160, 120), Color("#20282e"))
+        draw_rect(Rect2(3085, 285, 130, 105), Color("#0c1115"))
+        draw_arc(Vector2(3150, 285), 55, PI, PI * 2, 24, Color("#56e0ff"), 5)
+        if not world1_mystery_destination_found:
+            draw_circle(Vector2(3150, 285), 10 + sin(elapsed * 4) * 3, Color("#d8fbff"))
 
     # Interruptor final.
     draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
