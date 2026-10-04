@@ -1300,8 +1300,12 @@ func _draw():
         else:
             draw_rect(Rect2(trunk_x, 245, 28, 185), Color("#241811"))
         draw_rect(Rect2(trunk_x + 7, 255, 8, 175), Color("#49301d"))
+        if jungle_bark_texture != null:
+            draw_texture_rect(jungle_bark_texture, Rect2(trunk_x - 18, 260, 115, 48), true, Color(0.82, 0.86, 0.80, 0.62))
         draw_line(Vector2(trunk_x + 14, 310), Vector2(trunk_x - 28, 275), Color("#2b1b13"), 9)
         draw_line(Vector2(trunk_x + 14, 330), Vector2(trunk_x + 55, 290), Color("#2b1b13"), 8)
+        if jungle_leaves_texture != null:
+            draw_texture_rect(jungle_leaves_texture, Rect2(trunk_x - 70, 155, 170, 120), true, Color(0.72, 0.92, 0.68, 0.52))
         draw_circle(Vector2(trunk_x + 14, 214), 66, Color("#1d492c"))
         draw_circle(Vector2(trunk_x - 25, 238), 49, Color("#285c35"))
         draw_circle(Vector2(trunk_x + 52, 245), 52, Color("#245331"))
@@ -1321,10 +1325,12 @@ func _draw():
         draw_line(Vector2(fx, 414), Vector2(fx + 36, 404), Color("#477b3d"), 5)
 
     if jungle_rock_texture != null:
-        draw_texture_rect(jungle_rock_texture, Rect2(335, 389, 50, 40), true, Color(0.82, 0.82, 0.78, 1.0))
-        draw_texture_rect(jungle_rock_texture, Rect2(502, 401, 36, 28), true, Color(0.82, 0.82, 0.78, 1.0))
-        draw_texture_rect(jungle_rock_texture, Rect2(1575, 389, 50, 40), true, Color(0.82, 0.82, 0.78, 1.0))
-        draw_texture_rect(jungle_rock_texture, Rect2(2028, 397, 44, 32), true, Color(0.82, 0.82, 0.78, 1.0))
+        draw_texture_rect(jungle_rock_texture, Rect2(320, 392, 70, 38), true, Color(0.84, 0.86, 0.82, 0.92))
+        draw_texture_rect(jungle_rock_texture, Rect2(492, 400, 54, 30), true, Color(0.78, 0.82, 0.78, 0.90))
+        draw_texture_rect(jungle_rock_texture, Rect2(1560, 390, 68, 40), true, Color(0.84, 0.86, 0.82, 0.92))
+        draw_texture_rect(jungle_rock_texture, Rect2(2018, 397, 58, 33), true, Color(0.80, 0.84, 0.80, 0.90))
+        draw_texture_rect(jungle_rock_texture, Rect2(2860, 396, 74, 34), true, Color(0.82, 0.84, 0.80, 0.88))
+        draw_texture_rect(jungle_rock_texture, Rect2(3320, 402, 48, 28), true, Color(0.78, 0.82, 0.78, 0.88))
     else:
         draw_circle(Vector2(360, 414), 25, Color("#51493f"))
         draw_circle(Vector2(520, 420), 18, Color("#665b4b"))
