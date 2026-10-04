@@ -194,7 +194,6 @@ func _create_menu_ui():
     menu_title.rect_size = Vector2(390, 45)
     menu_title.align = Label.ALIGN_CENTER
     menu_title.add_color_override("font_color", Color("#55dfff"))
-    menu_title.add_font_override("font", ThemeDB.fallback_font)
     menu_panel.add_child(menu_title)
 
     menu_info = Label.new()
