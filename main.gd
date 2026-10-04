@@ -8,6 +8,8 @@ var victory_timer = 0.0
 var world1_ready = false
 var world1_mode = false
 var world1_portal_x = 3300.0
+var world1_items = 0
+var world1_item_positions = [Vector2(720, 350), Vector2(1720, 350), Vector2(2700, 350)]
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -59,9 +61,10 @@ func _process(delta):
             if victory_timer <= 0:
                 world1_ready = true
 
-        _update_enemy(delta)
-        _check_attack()
-        _check_enemy_contact()
+        if not world1_mode:
+            _update_enemy(delta)
+            _check_attack()
+            _check_enemy_contact()
         _update_ui()
     update()
 
@@ -235,6 +238,12 @@ func _draw_world1():
     draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
     draw_circle(p, 8, Color("#ffffff"))
 
+    for item in world1_item_positions:
+        draw_circle(item, 18, Color("#ffd85a"))
+        draw_circle(item, 9, Color("#fff4b0"))
+        draw_line(item + Vector2(-8, 0), item + Vector2(8, 0), Color("#ffffff"), 3)
+        draw_line(item + Vector2(0, -8), item + Vector2(0, 8), Color("#ffffff"), 3)
+
 func _create_hazards():
     for i in range(hazard_positions.size()):
         var area = Area2D.new()
@@ -282,7 +291,7 @@ func _create_exit():
     area.connect("body_entered", self, "_on_exit_body_entered")
 
 func _on_hazard_body_entered(body):
-    if body.name != "Stikman" or game_over or finished:
+    if body.name != "Stikman" or game_over or finished or world1_mode:
         return
 
     health -= 1
@@ -299,6 +308,17 @@ func _on_hazard_body_entered(body):
 func _on_collectible_body_entered(body, area):
     if body.name != "Stikman" or game_over or finished:
         return
+
+    if world1_mode:
+        for i in range(world1_item_positions.size()):
+            if body.position.distance_to(world1_item_positions[i]) < 55:
+                world1_item_positions.remove(i)
+                world1_items += 1
+                message_timer = 0.8
+                _update_ui()
+                break
+        return
+
     if not is_instance_valid(area):
         return
     if not area.is_in_group("collectible"):
@@ -320,6 +340,11 @@ func _on_exit_body_entered(body):
 
     if not world1_mode and not world1_ready:
         message_timer = 1.0
+        _update_ui()
+        return
+
+    if world1_mode and world1_items < 3:
+        message_timer = 2.0
         _update_ui()
         return
 
@@ -346,7 +371,10 @@ func _update_ui():
 
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
     hud.get_node("World").text = "MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA"
-    hud.get_node("Stats").text = "VIDA: %d/3     CRISTALES: %d/%d" % [health, coins, coin_positions.size()]
+    if world1_mode:
+        hud.get_node("Stats").text = "VIDA: %d/3     SEÑALES: %d/3" % [health, world1_items]
+    else:
+        hud.get_node("Stats").text = "VIDA: %d/3     CRISTALES: %d/%d" % [health, coins, coin_positions.size()]
     hud.get_node("Timer").text = "TIEMPO: %02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
 
     if game_over:
