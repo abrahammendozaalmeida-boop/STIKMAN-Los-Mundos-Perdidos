@@ -3,6 +3,8 @@ extends KinematicBody2D
 var velocity = Vector2.ZERO
 var speed = 260.0
 var run_speed = 350.0
+var acceleration = 1450.0
+var deceleration = 1850.0
 var jump_force = 470.0
 var gravity = 1100.0
 var anim_time = 0.0
@@ -11,6 +13,9 @@ var attacking = false
 var attack_timer = 0.0
 var outfit_id = 0
 var land_timer = 0.0
+var coyote_timer = 0.0
+var jump_buffer_timer = 0.0
+var was_on_floor = false
 
 func _ready():
     update()
@@ -20,47 +25,67 @@ func _physics_process(delta):
     var dialogue_locked = game != null and game.dialogue_active
     if dialogue_locked:
         velocity = Vector2.ZERO
+        coyote_timer = 0.0
+        jump_buffer_timer = 0.0
         update()
         return
 
     attacking = Input.is_key_pressed(KEY_J)
 
     var direction = 0
-
     if Input.is_action_pressed("move_left"):
         direction -= 1
-
     if Input.is_action_pressed("move_right"):
         direction += 1
 
-    var target_speed = speed
-    if Input.is_key_pressed(KEY_SHIFT):
-        target_speed = run_speed
-
-    velocity.x = direction * target_speed
+    var target_speed = run_speed if Input.is_key_pressed(KEY_SHIFT) else speed
+    var target_velocity = direction * target_speed
 
     if direction != 0:
+        velocity.x = move_toward(velocity.x, target_velocity, acceleration * delta)
         facing = direction
+    else:
+        velocity.x = move_toward(velocity.x, 0, deceleration * delta)
+
+    if direction != 0:
         anim_time += delta * (13.0 if target_speed == run_speed else 10.0)
     else:
         anim_time += delta * 3.0
 
-    if attack_timer > 0:
+    if attack_timer > 0.0:
         attack_timer -= delta
 
-    if is_on_floor():
-        if Input.is_action_just_pressed("jump"):
-            velocity.y = -jump_force
-    else:
-        velocity.y += gravity * delta
+    if jump_buffer_timer > 0.0:
+        jump_buffer_timer -= delta
+    if Input.is_action_just_pressed("jump"):
+        jump_buffer_timer = 0.12
 
-    var was_on_floor = is_on_floor()
+    var on_floor_before_move = is_on_floor()
+    if on_floor_before_move:
+        coyote_timer = 0.10
+    elif coyote_timer > 0.0:
+        coyote_timer -= delta
+
+    if jump_buffer_timer > 0.0 and coyote_timer > 0.0:
+        velocity.y = -jump_force
+        jump_buffer_timer = 0.0
+        coyote_timer = 0.0
+
+    if not on_floor_before_move:
+        velocity.y += gravity * delta
+    elif velocity.y > 0.0:
+        velocity.y = 0.0
+
+    was_on_floor = on_floor_before_move
     velocity = move_and_slide(velocity, Vector2.UP)
     var now_on_floor = is_on_floor()
+
     if now_on_floor and not was_on_floor and velocity.y >= 0:
         land_timer = 0.16
+
     if land_timer > 0.0:
         land_timer -= delta
+
     var max_x = 4700 if (game != null and game.world1_underground_mode) else 3500
     position.x = clamp(position.x, 40, max_x)
     update()
@@ -73,9 +98,11 @@ func _draw():
     var bob = sin(anim_time * 2.0) * (1.8 if running else 1.2) if moving and not airborne else 0.0
     var squash = 1.0
     var stretch = 1.0
+
     if airborne:
         stretch = 1.045
         squash = 0.975
+
     if land_timer > 0.0:
         var t = clamp(land_timer / 0.16, 0.0, 1.0)
         squash = 1.0 + sin(t * PI) * 0.08
@@ -105,6 +132,7 @@ func _draw():
 
     draw_line(Vector2(0, torso_top), Vector2(lean, torso_bottom), shirt_color, 13 * squash)
     draw_line(Vector2(-6, torso_top + 1), Vector2(6 + lean, torso_top + 1), shirt_color, 5)
+
     if outfit_id == 3:
         draw_line(Vector2(-10, torso_top + 4), Vector2(10 + lean, torso_top + 4), Color("#b99552"), 3)
 
