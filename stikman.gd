@@ -72,37 +72,39 @@ func _draw():
     # Sombra
     draw_ellipse(Vector2(0, 3), Vector2(24, 6), Color(0, 0, 0, 0.28))
 
-    # Cabeza
-    draw_circle(Vector2(0, -105), 24, Color("#edd0ae"))
-    if outfit_id == 3:
-        draw_arc(Vector2(0, -109), 25, PI, PI * 2, 20, Color("#c58b45"), 7)
-    draw_circle(Vector2(-8, -111), 3, Color("#111111"))
-    draw_circle(Vector2(8, -111), 3, Color("#111111"))
+    # Cabeza proporcionada al cuerpo, sin ojos ni expresiones.
+    # El personaje conserva la silueta minimalista de Stikman, pero con
+    # proporciones humanas y una presencia mas limpia.
+    draw_circle(Vector2(0, -67), 15, Color("#d9b99a"))
+    draw_arc(Vector2(0, -67), 15, 0, PI * 2, 24, Color("#b18e72"), 2)
 
-    # Cuerpo / ropa seleccionada
-    var shirt_color = Color("#111111")
+    # Cuello y torso.
+    var shirt_color = Color("#202328")
     if outfit_id == 1:
-        shirt_color = Color("#2f7de1")
+        shirt_color = Color("#315f9f")
     elif outfit_id == 2:
-        shirt_color = Color("#d94b45")
+        shirt_color = Color("#9b3b38")
     elif outfit_id == 3:
-        shirt_color = Color("#4b9b63")
-    draw_line(Vector2(0, -81), Vector2(0, -25), shirt_color, 11)
+        shirt_color = Color("#4f7359")
+
+    draw_line(Vector2(0, -51), Vector2(0, -23), shirt_color, 13)
+    draw_line(Vector2(-6, -50), Vector2(6, -50), shirt_color, 5)
+
     if outfit_id == 3:
-        draw_line(Vector2(-15, -78), Vector2(15, -78), Color("#d9b45b"), 5)
+        draw_line(Vector2(-10, -47), Vector2(10, -47), Color("#b99552"), 3)
 
-    # Brazos
+    # Brazos proporcionados.
     if attacking:
-        draw_line(Vector2(0, -70), Vector2(45 * facing, -60), Color("#111111"), 8)
-        draw_line(Vector2(0, -70), Vector2(-22 * facing, -40), Color("#111111"), 7)
-        draw_circle(Vector2(58 * facing, -60), 5, Color("#d7a65a"))
+        draw_line(Vector2(0, -48), Vector2(34 * facing, -39), Color("#202328"), 6)
+        draw_line(Vector2(0, -48), Vector2(-18 * facing, -30), Color("#202328"), 6)
+        draw_circle(Vector2(42 * facing, -39), 4, Color("#c79e7d"))
     else:
-        draw_line(Vector2(0, -70), Vector2(-28 + swing, -42), Color("#111111"), 7)
-        draw_line(Vector2(0, -70), Vector2(28 - swing, -42), Color("#111111"), 7)
+        draw_line(Vector2(0, -48), Vector2(-20 + swing * 0.7, -28), Color("#202328"), 6)
+        draw_line(Vector2(0, -48), Vector2(20 - swing * 0.7, -28), Color("#202328"), 6)
 
-    # Piernas
-    draw_line(Vector2(0, -25), Vector2(-18 + swing, 0), Color("#111111"), 8)
-    draw_line(Vector2(0, -25), Vector2(18 - swing, 0), Color("#111111"), 8)
+    # Piernas proporcionadas y ligeramente mas gruesas para dar peso.
+    draw_line(Vector2(0, -23), Vector2(-11 + swing * 0.7, 0), Color("#202328"), 7)
+    draw_line(Vector2(0, -23), Vector2(11 - swing * 0.7, 0), Color("#202328"), 7)
 
 func draw_ellipse(center, radius, color):
     var points = PoolVector2Array()
