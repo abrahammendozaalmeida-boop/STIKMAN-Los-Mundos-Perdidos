@@ -281,17 +281,14 @@ func _draw_world1():
             draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#1e9f8a"))
             draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#7dffe8"))
             draw_circle(terminal, 10, Color("#ffffff"))
-            draw_string(ThemeDB.fallback_font, terminal + Vector2(-52, 98), "NODO ACTIVADO", Color("#baffef"))
         elif world1_signal_collected[i]:
             draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#d4a72c"))
             draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#ffe57d"))
             draw_circle(terminal, 10, Color("#ffffff"))
-            draw_string(ThemeDB.fallback_font, terminal + Vector2(-55, 98), "REGRESA AQUI", Color("#fff1a8"))
         else:
             draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#50555a"))
             draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#737a80"))
             draw_circle(terminal, 10, Color("#b8c0c5"))
-            draw_string(ThemeDB.fallback_font, terminal + Vector2(-42, 98), "ESPERANDO", Color("#d9d9d9"))
 
     for i in range(world1_item_positions.size()):
         if not world1_signal_collected[i]:
@@ -412,6 +409,7 @@ func _on_exit_body_entered(body):
 
     if not world1_mode:
         world1_mode = true
+        world1_ready = false
         body.position = Vector2(220, 350)
         body.velocity = Vector2.ZERO
         var portal = get_node_or_null("PortalFinal")
