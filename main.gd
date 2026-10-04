@@ -87,6 +87,10 @@ var menu_title = null
 var menu_info = null
 var menu_buttons = []
 var save_exists = false
+var checkpoint_position = Vector2(180, 430)
+var checkpoint_level = 1
+var checkpoint_world = 1
+var level_select_unlocked = 1
 var save_path = "user://stikman_save.json"
 var settings_fullscreen = false
 var outfit_id = 0
@@ -232,10 +236,11 @@ func _show_main_menu():
         _add_menu_button("CONTINUAR PARTIDA", "_menu_continue", 145)
     else:
         _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 145)
-    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 195)
-    _add_menu_button("TIENDA", "_menu_shop", 245)
-    _add_menu_button("AJUSTES", "_menu_settings", 295)
-    _add_menu_button("SALIR", "_menu_exit", 345)
+    _add_menu_button("SELECCIONAR NIVEL", "_menu_level_select", 195)
+    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 245)
+    _add_menu_button("TIENDA", "_menu_shop", 295)
+    _add_menu_button("AJUSTES", "_menu_settings", 345)
+    _add_menu_button("SALIR", "_menu_exit", 395)
 
 func _start_game():
     game_started = true
@@ -291,6 +296,39 @@ func _menu_save():
     _save_game()
     menu_info.text = "PARTIDA GUARDADA\nPuedes salir con tranquilidad."
     
+func _menu_level_select():
+    _clear_menu_buttons()
+    menu_title.text = "SELECCIONAR NIVEL"
+    menu_info.text = "Desbloqueados: 1 - %d" % level_select_unlocked
+    var shown = min(level_select_unlocked, 8)
+    for i in range(shown):
+        _add_menu_button("NIVEL %d • %s" % [i + 1, world1_level_titles[i]], "_select_level_%d" % (i + 1), 115 + i * 38)
+    _add_menu_button("VOLVER", "_menu_back", 430)
+
+func _select_level_1(): _select_level(1)
+func _select_level_2(): _select_level(2)
+func _select_level_3(): _select_level(3)
+func _select_level_4(): _select_level(4)
+func _select_level_5(): _select_level(5)
+func _select_level_6(): _select_level(6)
+func _select_level_7(): _select_level(7)
+func _select_level_8(): _select_level(8)
+
+func _select_level(level_number):
+    if level_number > level_select_unlocked:
+        return
+    world1_level = level_number
+    world1_mode = true
+    checkpoint_level = level_number
+    checkpoint_world = 1
+    checkpoint_position = Vector2(220, 350)
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = checkpoint_position
+        player.velocity = Vector2.ZERO
+    _save_game()
+    _start_game()
+
 func _menu_customize():
     _clear_menu_buttons()
     menu_title.text = "PERSONALIZAR STIKMAN"
@@ -374,6 +412,11 @@ func _save_game():
     var file = File.new()
     var data = {
         "world1_level": world1_level,
+        "checkpoint_position_x": checkpoint_position.x,
+        "checkpoint_position_y": checkpoint_position.y,
+        "checkpoint_level": checkpoint_level,
+        "checkpoint_world": checkpoint_world,
+        "level_select_unlocked": level_select_unlocked,
         "world1_mode": world1_mode,
         "coins": coins,
         "outfit_id": outfit_id,
@@ -415,6 +458,10 @@ func _load_save():
         return
     save_exists = true
     world1_level = clamp(int(parsed.get("world1_level", 1)), 1, world1_level_count)
+    checkpoint_position = Vector2(float(parsed.get("checkpoint_position_x", 180.0)), float(parsed.get("checkpoint_position_y", 430.0)))
+    checkpoint_level = clamp(int(parsed.get("checkpoint_level", world1_level)), 1, world1_level_count)
+    checkpoint_world = max(1, int(parsed.get("checkpoint_world", 1)))
+    level_select_unlocked = clamp(int(parsed.get("level_select_unlocked", world1_level)), 1, world1_level_count)
     world1_mode = bool(parsed.get("world1_mode", false))
     coins = max(0, int(parsed.get("coins", 0)))
     outfit_id = clamp(int(parsed.get("outfit_id", 0)), 0, 3)
@@ -442,7 +489,7 @@ func _load_save():
     var player = get_node_or_null("Stikman")
     if player != null:
         if world1_mode:
-            player.position = Vector2(220, 350)
+            player.position = checkpoint_position
         player.velocity = Vector2.ZERO
     _apply_outfit()
 
@@ -459,6 +506,10 @@ func _reset_game_state():
     finished = false
     elapsed = 0.0
     world1_level = 1
+    checkpoint_level = 1
+    checkpoint_world = 1
+    level_select_unlocked = 1
+    checkpoint_position = Vector2(180, 430)
     world1_mode = false
     world1_ready = false
     world1_items = 0
@@ -677,16 +728,29 @@ func _check_enemy_contact():
             player.set_physics_process(false)
 
 
+func _set_checkpoint(position_value):
+    checkpoint_position = position_value
+    checkpoint_level = world1_level
+    checkpoint_world = 1
+    if level_select_unlocked < world1_level:
+        level_select_unlocked = world1_level
+    _save_game()
+
 func _complete_world1_level(next_position):
     if world1_level_completed:
         return
     world1_level_completed = true
     if world1_level < world1_level_count:
         world1_level += 1
+        level_select_unlocked = max(level_select_unlocked, world1_level)
     var player = get_node_or_null("Stikman")
     if player != null:
         player.position = next_position
         player.velocity = Vector2.ZERO
+    checkpoint_position = next_position
+    checkpoint_level = world1_level
+    checkpoint_world = 1
+    _save_game()
     _start_dialogue("STIKMAN", [
         "Lo que encontre aqui no termina en esta zona.",
         "La pista continua justo delante.",
