@@ -1509,6 +1509,34 @@ func _show_level_intro(level_number):
     var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
     _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
 
+func _build_parkour_geometry():
+    # Plataformas y desniveles reales para que el recorrido tenga parkour.
+    # Se crean como StaticBody2D y se reutilizan por todo el Mundo 1.
+    var data = [
+        [520, 455, 220, 18], [820, 390, 180, 18], [1110, 470, 200, 18],
+        [1450, 350, 210, 18], [1730, 430, 190, 18], [2050, 350, 230, 18],
+        [2390, 300, 220, 18], [2700, 420, 220, 18], [3050, 360, 240, 18]
+    ]
+    for item in data:
+        var body = StaticBody2D.new()
+        body.position = Vector2(item[0], item[1])
+        body.name = "ParkourPlatform_%d" % int(item[0])
+        var shape = CollisionShape2D.new()
+        var rect = RectangleShape2D.new()
+        rect.extents = Vector2(item[2] / 2.0, item[3] / 2.0)
+        shape.shape = rect
+        body.add_child(shape)
+        add_child(body)
+
+func _draw_parkour_visuals():
+    var data = [
+        [520, 455, 220, 18], [820, 390, 180, 18], [1110, 470, 200, 18],
+        [1450, 350, 210, 18], [1730, 430, 190, 18], [2050, 350, 230, 18],
+        [2390, 300, 220, 18], [2700, 420, 220, 18], [3050, 360, 240, 18]
+    ]
+    for item in data:
+        draw_rect(Rect2(item[0] - item[2] / 2.0, item[1] - item[3] / 2.0, item[2], item[3]), Color("#26332b"))
+
 func _apply_level_terrain():
     # Cada tramo cambia la altura para evitar un recorrido plano.
     # Los elementos visuales/colisiones existentes se mantienen; aqui se
