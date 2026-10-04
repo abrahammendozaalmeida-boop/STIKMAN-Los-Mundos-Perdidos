@@ -13,6 +13,12 @@ var world1_item_positions = [Vector2(720, 350), Vector2(1720, 350), Vector2(2700
 var world1_signal_collected = [false, false, false]
 var world1_terminal_positions = [Vector2(450, 350), Vector2(1450, 350), Vector2(2450, 350)]
 var world1_terminal_activated = [false, false, false]
+var world1_door_open = false
+var world1_key_collected = false
+var world1_switch_activated = false
+var world1_key_position = Vector2(2050, 350)
+var world1_door_x = 2350.0
+var world1_switch_position = Vector2(2900, 350)
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -153,6 +159,29 @@ func _check_world1_progress():
         changed = true
 
     if changed:
+        _update_ui()
+        update()
+
+func _check_world1_interactions():
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+
+    if world1_ready and not world1_key_collected and player.position.distance_to(world1_key_position) < 55:
+        world1_key_collected = true
+        message_timer = 1.5
+        _update_ui()
+        update()
+
+    if world1_key_collected and not world1_door_open and player.position.distance_to(Vector2(world1_door_x, 350)) < 90:
+        world1_door_open = true
+        message_timer = 1.5
+        _update_ui()
+        update()
+
+    if world1_door_open and not world1_switch_activated and player.position.distance_to(world1_switch_position) < 70:
+        world1_switch_activated = true
+        message_timer = 1.5
         _update_ui()
         update()
 
@@ -297,6 +326,24 @@ func _draw_world1():
             draw_circle(item, 9, Color("#fff4b0"))
             draw_line(item + Vector2(-8, 0), item + Vector2(8, 0), Color("#ffffff"), 3)
             draw_line(item + Vector2(0, -8), item + Vector2(0, 8), Color("#ffffff"), 3)
+
+    # Llave que aparece después de activar los tres nodos.
+    if world1_ready and not world1_key_collected:
+        draw_circle(world1_key_position, 16, Color("#f5c542"))
+        draw_circle(world1_key_position, 7, Color("#fff3a1"))
+        draw_line(world1_key_position + Vector2(12, 0), world1_key_position + Vector2(28, 0), Color("#f5c542"), 5)
+
+    # Puerta que requiere la llave.
+    if not world1_door_open:
+        draw_rect(Rect2(world1_door_x - 18, 250, 36, 180), Color("#34383d"))
+        draw_rect(Rect2(world1_door_x - 12, 260, 24, 160), Color("#5d646b"))
+        draw_circle(Vector2(world1_door_x, 340), 6, Color("#ffd85a"))
+    else:
+        draw_rect(Rect2(world1_door_x - 6, 250, 12, 180), Color(0.25, 0.8, 0.65, 0.35))
+
+    # Interruptor final.
+    draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
+    draw_circle(world1_switch_position + Vector2(0, -5), 13, Color("#56e0ff") if world1_switch_activated else Color("#ffbd45"))
 
     var p = Vector2(world1_portal_x, 350)
     if world1_ready:
@@ -457,8 +504,14 @@ func _update_ui():
         else:
             hud.get_node("Message").text = "¡GUARDIAN DERROTADO!"
     elif world1_mode:
-        if world1_ready:
-            hud.get_node("Message").text = "¡3 NODOS ACTIVADOS!\nVE AL PORTAL AZUL"
+        if world1_ready and not world1_key_collected:
+            hud.get_node("Message").text = "¡LOS NODOS ESTAN ACTIVOS!\nBUSCA LA LLAVE"
+        elif world1_key_collected and not world1_door_open:
+            hud.get_node("Message").text = "LLAVE CONSEGUIDA\nREGRESA A LA PUERTA"
+        elif world1_door_open and not world1_switch_activated:
+            hud.get_node("Message").text = "PUERTA ABIERTA\nACTIVA EL INTERRUPTOR"
+        elif world1_switch_activated:
+            hud.get_node("Message").text = "¡CAMINO DESBLOQUEADO!\nVE AL PORTAL AZUL"
         elif world1_items < 3:
             hud.get_node("Message").text = "BUSCA LAS SEÑALES Y REGRESA A SU NODO"
         else:
