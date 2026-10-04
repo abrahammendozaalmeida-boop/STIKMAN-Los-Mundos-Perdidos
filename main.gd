@@ -6,6 +6,8 @@ var game_over = false
 var finished = false
 var victory_timer = 0.0
 var world1_ready = false
+var world1_mode = false
+var world1_portal_x = 3300.0
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -111,6 +113,10 @@ func _check_enemy_contact():
             player.set_physics_process(false)
 
 func _draw():
+    if world1_mode:
+        _draw_world1()
+        return
+
     # Cielo y ambiente
     draw_rect(Rect2(0, 0, 3600, 540), Color("#10261b"))
     draw_circle(Vector2(700, 90), 58, Color("#d9e7c8"))
@@ -195,6 +201,40 @@ func _draw():
         draw_circle(p, 10, Color("#f4d35e"))
         draw_circle(p, 5, Color("#fff1a8"))
 
+func _draw_world1():
+    draw_rect(Rect2(0, 0, 3600, 540), Color("#7fc8f2"))
+    draw_circle(Vector2(720, 85), 55, Color("#fff1a8"))
+
+    for x in range(120, 3500, 310):
+        var h = 150 + int(abs(sin(float(x) * 0.07)) * 130)
+        draw_rect(Rect2(x, 430 - h, 210, h), Color("#d9d2c3"))
+        for row in range(3):
+            for col in range(4):
+                draw_rect(Rect2(x + 28 + col * 43, 430 - h + 42 + row * 45, 20, 28), Color("#8bc6df"))
+
+    draw_rect(Rect2(0, 430, 3600, 110), Color("#45484d"))
+    draw_rect(Rect2(0, 430, 3600, 12), Color("#c6c8c9"))
+
+    for x in range(40, 3600, 120):
+        draw_rect(Rect2(x, 480, 65, 8), Color("#e7d86d"))
+
+    for x in range(80, 3500, 260):
+        draw_rect(Rect2(x, 355, 18, 75), Color("#6b4329"))
+        draw_circle(Vector2(x + 9, 340), 38, Color("#3f8f4a"))
+        draw_circle(Vector2(x - 12, 350), 28, Color("#4ca957"))
+
+    for x in range(400, 3300, 600):
+        draw_rect(Rect2(x, 405, 100, 28), Color("#d94b45"))
+        draw_rect(Rect2(x + 18, 390, 64, 22), Color("#b7d9e8"))
+        draw_circle(Vector2(x + 22, 433), 12, Color("#202328"))
+        draw_circle(Vector2(x + 78, 433), 12, Color("#202328"))
+
+    var p = Vector2(world1_portal_x, 350)
+    draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.16))
+    draw_arc(p, 58, 0, PI * 2, 48, Color("#56e0ff"), 8)
+    draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
+    draw_circle(p, 8, Color("#ffffff"))
+
 func _create_hazards():
     for i in range(hazard_positions.size()):
         var area = Area2D.new()
@@ -273,14 +313,26 @@ func _on_exit_body_entered(body):
     if body.name != "Stikman" or game_over:
         return
 
-    if enemy_alive:
+    if not world1_mode and enemy_alive:
         message_timer = 2.0
         _update_ui()
         return
 
-    if not world1_ready:
+    if not world1_mode and not world1_ready:
         message_timer = 1.0
         _update_ui()
+        return
+
+    if not world1_mode:
+        world1_mode = true
+        body.position = Vector2(220, 350)
+        body.velocity = Vector2.ZERO
+        var portal = get_node_or_null("PortalFinal")
+        if portal != null:
+            portal.position = Vector2(world1_portal_x, 350)
+        message_timer = 3.0
+        _update_ui()
+        update()
         return
 
     finished = true
@@ -293,14 +345,14 @@ func _update_ui():
         return
 
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
-    hud.get_node("World").text = "PROLOGO: LA SELVA"
+    hud.get_node("World").text = "MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA"
     hud.get_node("Stats").text = "VIDA: %d/3     CRISTALES: %d/%d" % [health, coins, coin_positions.size()]
     hud.get_node("Timer").text = "TIEMPO: %02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
 
     if game_over:
         hud.get_node("Message").text = "HAS CAIDO EN LA SELVA\nPulsa F5 para volver a intentarlo"
     elif finished:
-        hud.get_node("Message").text = "¡MUNDO 1 DESBLOQUEADO!\nBIENVENIDO AL MUNDO NORMAL"
+        hud.get_node("Message").text = "¡MUNDO 2 DESBLOQUEADO!\nCONTINUA TU AVENTURA"
     elif victory_timer > 0:
         hud.get_node("Message").text = "¡GUARDIAN DERROTADO!\nEL PORTAL SE ESTA ABRIENDO..."
     elif message_timer > 0:
