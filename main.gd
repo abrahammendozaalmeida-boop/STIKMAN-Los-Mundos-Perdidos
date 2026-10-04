@@ -94,6 +94,28 @@ var level_select_unlocked = 1
 var checkpoint_message_timer = 0.0
 var auto_save_timer = 0.0
 var level_start_positions = [Vector2(220,350),Vector2(520,350),Vector2(850,350),Vector2(1180,350),Vector2(1500,350),Vector2(1800,350),Vector2(2100,350),Vector2(2400,350),Vector2(2700,350),Vector2(3000,350),Vector2(3150,350),Vector2(3800,350),Vector2(4050,350),Vector2(4250,350),Vector2(220,350),Vector2(850,350),Vector2(1500,350),Vector2(2100,350),Vector2(2750,350),Vector2(3300,350)]
+var level_start_dialogues = [
+["La ciudad esta vacia.", "Hay algo que no encaja aqui.", "Tengo que encontrar una señal."],
+["La señal me trajo hasta aqui.", "El camino continua.", "Debo seguir la energia."],
+["La estacion sigue encendida.", "Pero nadie la esta controlando.", "Hay algo bloqueando el paso."],
+["El camino esta bloqueado.", "Necesito encontrar otra forma de avanzar.", "Tal vez haya algo cerca que pueda mover."],
+["Esta puerta no se abre.", "Debe existir algun mecanismo.", "Voy a buscar una forma de activarlo."],
+["Alguien perdio una llave aqui.", "Si la encuentro, podre continuar.", "Tengo que revisar el camino."],
+["Un interruptor controla parte del sistema.", "Si lo activo, algo deberia cambiar.", "Voy a probarlo."],
+["Hay una caja extraña en el camino.", "Parece tener un proposito.", "Voy a averiguar para que sirve."],
+["La plataforma se ha activado.", "Ahora puedo alcanzar lugares mas altos.", "El camino continua arriba."],
+["Esta señal no se parece a las anteriores.", "Alguien esta manipulando la energia.", "Tengo que descubrir por que."],
+["El conducto lleva la energia hacia abajo.", "La ciudad oculta algo bajo sus calles.", "Voy a seguir la ruta."],
+["Estoy bajo la ciudad.", "Las maquinas siguen funcionando.", "La respuesta debe estar aqui."],
+["Esta maquina esta desviando la energia.", "Alguien construyo este sistema.", "Tengo que encontrar su ruta."],
+["La ruta oculta continua mas adelante.", "Cada señal apunta al mismo lugar.", "Ya casi entiendo que esta pasando."],
+["La ciudad ha entrado en alerta.", "Algo detecto mi presencia.", "Tengo que avanzar antes de que sea tarde."],
+["El rastro de energia sigue activo.", "No puedo perderlo.", "La respuesta esta cada vez mas cerca."],
+["Algo me esta siguiendo.", "No puedo detenerme.", "Tengo que llegar a la entrada final."],
+["Esta es la ultima entrada.", "Detras de ella debe estar la fuente.", "Me preparo para descubrir la verdad."],
+["La antesala esta completamente vacia.", "Pero puedo sentir la energia al otro lado.", "Solo queda avanzar."],
+["Llegue al final de la ciudad.", "Algo enorme esta protegiendo la salida.", "Si quiero continuar, tendre que enfrentarlo."]
+]
 var save_path = "user://stikman_save.json"
 var settings_fullscreen = false
 var outfit_id = 0
@@ -1448,6 +1470,10 @@ func _on_exit_body_entered(body):
     body.set_physics_process(false)
     _update_ui()
 
+func _show_level_intro(level_number):
+    var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
+    _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
+
 func _start_world1_level(level_number):
     world1_level = clamp(level_number, 1, world1_level_count)
     world1_mode = true
@@ -1480,8 +1506,11 @@ func _start_world1_level(level_number):
     _save_game()
     _update_ui()
     update()
+    _show_level_intro(world1_level)
 
 func _restart_from_checkpoint():
+    world1_level = checkpoint_level
+    world1_mode = true
     var player = get_node_or_null("Stikman")
     if player != null:
         player.position = checkpoint_position
