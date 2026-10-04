@@ -2247,10 +2247,14 @@ func _start_world1_level(level_number):
     _show_level_intro(world1_level)
 
 func _restart_from_checkpoint():
+    # Respawn conserva el mundo real del checkpoint.
+    # No mandamos al jugador a la ciudad si el checkpoint pertenece al prologo.
     world1_level = checkpoint_level
-    world1_mode = true
+    world1_mode = checkpoint_world == 1
     world1_underground_mode = false
     world1_level_completed = false
+    dialogue_active = false
+    dialogue_resume_guard = false
     world1_box_position = Vector2(1800, 390)
     world1_platform_x = 2550.0
     world1_platform_direction = 1.0
@@ -2283,7 +2287,6 @@ func _restart_from_checkpoint():
     health = 3
     game_over = false
     paused = false
-    dialogue_active = false
     menu_panel.visible = false
     _clear_menu_buttons()
     checkpoint_message_timer = 2.0
