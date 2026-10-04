@@ -1,18 +1,27 @@
 [application]
 
 config/name="STIKMAN - LOS MUNDOS PERDIDOS"
-run/main_scene="res://main.tscn"
+run/main_scene="res://scenes/boot/boot.tscn"
+
+[autoload]
+
+GameState="*res://scripts/autoload/game_state.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
+SceneRouter="*res://scripts/autoload/scene_router.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 
 [display]
 
 window/size/width=960
 window/size/height=540
 window/stretch/mode="2d"
+window/handheld/orientation=0
 
 [rendering]
 
 environment/defaults/default_clear_color=Color(0.04, 0.07, 0.05, 1)
 quality/driver/driver_name="GLES2"
+quality/2d/use_pixel_snap=false
 
 [input]
 
@@ -26,12 +35,27 @@ move_right={
 "events": [Object(InputEventKey,"scancode":68), Object(InputEventKey,"scancode":16777233)]
 }
 
+jump={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":32)]
+}
+
+run={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":16777237)]
+}
+
 attack={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"scancode":74)]
 }
 
-jump={
+interact={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"scancode":32)]
+"events": [Object(InputEventKey,"scancode":69)]
+}
+
+pause={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":16777217)]
 }
