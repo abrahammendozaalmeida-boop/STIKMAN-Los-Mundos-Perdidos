@@ -202,6 +202,10 @@ var jungle_ground_texture = null
 var jungle_bark_texture = null
 var jungle_rock_texture = null
 var jungle_leaves_texture = null
+var city_concrete_texture = null
+var city_asphalt_texture = null
+var city_metal_texture = null
+var underground_texture = null
 var outfit_id = 0
 var owned_outfits = [true, false, false, false]
 var outfit_names = ["Clasico", "Azul", "Rojo", "Explorador"]
@@ -233,6 +237,10 @@ func _ready():
     jungle_bark_texture = load("res://assets/textures/jungle/bark.svg")
     jungle_rock_texture = load("res://assets/textures/jungle/rock.svg")
     jungle_leaves_texture = load("res://assets/textures/jungle/leaves.svg")
+    city_concrete_texture = load("res://assets/textures/city/concrete.svg")
+    city_asphalt_texture = load("res://assets/textures/city/asphalt.svg")
+    city_metal_texture = load("res://assets/textures/city/metal.svg")
+    underground_texture = load("res://assets/textures/city/underground.svg")
     _create_dialogue_ui()
     var title_label = get_node_or_null("HUD/Title")
     if title_label != null:
@@ -245,7 +253,10 @@ func _ready():
     _create_world1_box()
     _create_world1_underground_zone()
     _load_save()
-    _rebuild_level_geometry()
+    if world1_mode:
+        _rebuild_level_geometry()
+    else:
+        _clear_level_geometry()
     _create_menu_ui()
     _show_main_menu()
     _update_ui()
@@ -256,6 +267,13 @@ func _process(delta):
     if game_started and not game_over and not finished and player != null and player.position.y > 620:
         _trigger_game_over(player)
         return
+
+    # En el prologo guardamos una posicion segura real de la selva.
+    # Asi morir no cambia de mundo y el regreso queda cerca del ultimo suelo pisado.
+    if game_started and not world1_mode and player != null and player.is_on_floor() and player.position.y < 500:
+        checkpoint_position = player.position
+        checkpoint_world = 0
+        checkpoint_level = 1
 
     _update_moving_level_objects(delta)
     _check_level_completion()
@@ -326,8 +344,8 @@ func _create_menu_ui():
 
     menu_panel = Panel.new()
     menu_panel.name = "MenuPanel"
-    menu_panel.rect_position = Vector2(250, 55)
-    menu_panel.rect_size = Vector2(460, 480)
+    menu_panel.rect_position = Vector2(250, 10)
+    menu_panel.rect_size = Vector2(460, 520)
     menu_layer.add_child(menu_panel)
 
     menu_title = Label.new()
@@ -374,11 +392,12 @@ func _show_main_menu():
         _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 185)
     else:
         _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 145)
-    _add_menu_button("SELECCIONAR NIVEL", "_menu_level_select", 235)
-    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 285)
-    _add_menu_button("TIENDA", "_menu_shop", 335)
-    _add_menu_button("AJUSTES", "_menu_settings", 385)
-    _add_menu_button("SALIR", "_menu_exit", 435)
+    _add_menu_button("MAPA DE MUNDOS", "_menu_world_map", 230)
+    _add_menu_button("SELECCIONAR NIVEL", "_menu_level_select", 280)
+    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 330)
+    _add_menu_button("TIENDA", "_menu_shop", 380)
+    _add_menu_button("AJUSTES", "_menu_settings", 430)
+    _add_menu_button("SALIR", "_menu_exit", 475)
 
 func _start_game():
     game_started = true
@@ -439,12 +458,13 @@ func _show_pause_menu():
     menu_panel.visible = true
     menu_title.text = "PAUSA"
     menu_info.text = "Tu progreso se guardo automaticamente.\nNivel: %d/20  •  Monedas: %d" % [world1_level, coins]
-    _add_menu_button("CONTINUAR", "_hide_pause_menu", 145)
-    _add_menu_button("GUARDAR PARTIDA", "_menu_save", 195)
-    _add_menu_button("PERSONALIZAR", "_menu_customize", 245)
-    _add_menu_button("TIENDA", "_menu_shop", 295)
-    _add_menu_button("AJUSTES", "_menu_settings", 345)
-    _add_menu_button("MENU PRINCIPAL", "_menu_main_from_pause", 395)
+    _add_menu_button("CONTINUAR", "_hide_pause_menu", 135)
+    _add_menu_button("GUARDAR PARTIDA", "_menu_save", 180)
+    _add_menu_button("MAPA DE MUNDOS", "_menu_world_map", 225)
+    _add_menu_button("PERSONALIZAR", "_menu_customize", 270)
+    _add_menu_button("TIENDA", "_menu_shop", 315)
+    _add_menu_button("AJUSTES", "_menu_settings", 360)
+    _add_menu_button("MENU PRINCIPAL", "_menu_main_from_pause", 405)
 
 func _hide_pause_menu():
     paused = false
@@ -459,6 +479,48 @@ func _menu_save():
     _save_game()
     menu_info.text = "PARTIDA GUARDADA\nPuedes salir con tranquilidad."
     
+func _menu_world_map():
+    _clear_menu_buttons()
+    menu_title.text = "MAPA DE MUNDOS"
+    menu_info.text = "Cada mundo conserva su propia zona y progreso."
+    _add_menu_button("PROLOGO • LA SELVA", "_map_enter_jungle", 135)
+    var city_unlocked = checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
+    var city_label = "MUNDO 1 • LA CIUDAD" if city_unlocked else "MUNDO 1 • LA CIUDAD (BLOQUEADO)"
+    _add_menu_button(city_label, "_map_enter_city", 185)
+    _add_menu_button("MUNDO 2 • UNIVERSO ROTO (PRÓXIMAMENTE)", "_map_locked_world", 235)
+    _add_menu_button("MUNDO 3 • CONTROL DE IA (PRÓXIMAMENTE)", "_map_locked_world", 285)
+    _add_menu_button("MUNDO 4 • JÚPITER (PRÓXIMAMENTE)", "_map_locked_world", 335)
+    _add_menu_button("MUNDO 5 • DESCONOCIDO (PRÓXIMAMENTE)", "_map_locked_world", 385)
+    _add_menu_button("VOLVER", "_menu_back", 435)
+
+func _map_enter_jungle():
+    if checkpoint_world == 1:
+        checkpoint_position = Vector2(180, 430)
+    world1_mode = false
+    world1_underground_mode = false
+    checkpoint_world = 0
+    checkpoint_level = 1
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = checkpoint_position
+        player.velocity = Vector2.ZERO
+        var camera = player.get_node_or_null("Camera2D")
+        if camera != null:
+            camera.limit_right = 3600
+    _clear_level_geometry()
+    _save_game()
+    _start_game()
+
+func _map_enter_city():
+    var city_unlocked = checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
+    if not city_unlocked:
+        menu_info.text = "Primero llega al portal de la selva para desbloquear la ciudad."
+        return
+    _select_level(max(1, checkpoint_level))
+
+func _map_locked_world():
+    menu_info.text = "Este mundo se desbloqueará al completar la historia anterior."
+
 func _menu_level_select():
     _clear_menu_buttons()
     menu_title.text = "SELECCIONAR NIVEL"
@@ -647,7 +709,7 @@ func _load_save():
     world1_level = clamp(int(parsed.get("world1_level", 1)), 1, world1_level_count)
     checkpoint_position = Vector2(float(parsed.get("checkpoint_position_x", 180.0)), float(parsed.get("checkpoint_position_y", 430.0)))
     checkpoint_level = clamp(int(parsed.get("checkpoint_level", world1_level)), 1, world1_level_count)
-    checkpoint_world = max(1, int(parsed.get("checkpoint_world", 1)))
+    checkpoint_world = clamp(int(parsed.get("checkpoint_world", 0 if not bool(parsed.get("world1_mode", false)) else 1)), 0, 1)
     level_select_unlocked = clamp(int(parsed.get("level_select_unlocked", world1_level)), 1, world1_level_count)
     world1_mode = bool(parsed.get("world1_mode", false))
     coins = max(0, int(parsed.get("coins", 0)))
@@ -675,8 +737,7 @@ func _load_save():
     world1_underground_generator_activated = bool(parsed.get("world1_underground_generator_activated", false))
     var player = get_node_or_null("Stikman")
     if player != null:
-        if world1_mode:
-            player.position = checkpoint_position
+        player.position = checkpoint_position
         player.velocity = Vector2.ZERO
     _apply_outfit()
 
@@ -1438,6 +1499,10 @@ func _draw_world1():
     draw_rect(Rect2(0, 0, 3600, 255), Color("#8195a0"))
     draw_circle(Vector2(760, 82), 48, Color("#d7d3bb"))
 
+    # Textura de concreto para fachadas: comparte material entre edificios.
+    if city_concrete_texture != null:
+        draw_texture_rect(city_concrete_texture, Rect2(0, 250, 3600, 180), true, Color(0.78, 0.82, 0.82, 0.34))
+
     # Horizonte y silueta de la ciudad.
     for x in range(40, 3600, 280):
         var h = 135 + int(abs(sin(float(x) * 0.031)) * 115)
@@ -1468,7 +1533,10 @@ func _draw_world1():
 
     # Calle: banqueta, asfalto, separadores y luminarias.
     draw_rect(Rect2(0, 408, 3600, 22), Color("#a2a2a0"))
-    draw_rect(Rect2(0, 430, 3600, 110), Color("#303438"))
+    if city_asphalt_texture != null:
+        draw_texture_rect(city_asphalt_texture, Rect2(0, 430, 3600, 110), true, Color(0.82, 0.86, 0.88, 0.76))
+    else:
+        draw_rect(Rect2(0, 430, 3600, 110), Color("#303438"))
     draw_rect(Rect2(0, 430, 3600, 5), Color("#1f2326"))
     draw_rect(Rect2(0, 438, 3600, 3), Color("#565b5e"))
     for x in range(55, 3600, 145):
@@ -1786,8 +1854,14 @@ func _draw_world1_underground():
         return
 
     draw_rect(Rect2(3600, 0, 1100, 540), Color("#10171d"))
-    draw_rect(Rect2(3600, 0, 1100, 430), Color("#18242b"))
-    draw_rect(Rect2(3550, 430, 1200, 110), Color("#252b30"))
+    if underground_texture != null:
+        draw_texture_rect(underground_texture, Rect2(3600, 0, 1100, 430), true, Color(0.75, 0.82, 0.86, 0.32))
+    else:
+        draw_rect(Rect2(3600, 0, 1100, 430), Color("#18242b"))
+    if city_metal_texture != null:
+        draw_texture_rect(city_metal_texture, Rect2(3550, 430, 1200, 110), true, Color(0.8, 0.86, 0.88, 0.45))
+    else:
+        draw_rect(Rect2(3550, 430, 1200, 110), Color("#252b30"))
     draw_rect(Rect2(3550, 430, 1200, 10), Color("#3f6874"))
     draw_rect(Rect2(3970, 380, 260, 20), Color("#394b53"))
     draw_rect(Rect2(3970, 380, 260, 5), Color("#56e0ff"))
@@ -2002,8 +2076,12 @@ func _on_exit_body_entered(body):
     if not world1_mode:
         world1_mode = true
         world1_ready = false
+        checkpoint_position = Vector2(220, 350)
+        checkpoint_level = 1
+        checkpoint_world = 1
         _start_world1_dialogue()
         body.position = Vector2(220, 350)
+        _save_game()
         body.velocity = Vector2.ZERO
         var portal = get_node_or_null("PortalFinal")
         if portal != null:
@@ -2249,9 +2327,17 @@ func _start_world1_level(level_number):
 func _restart_from_checkpoint():
     # Respawn conserva el mundo real del checkpoint.
     # No mandamos al jugador a la ciudad si el checkpoint pertenece al prologo.
-    world1_level = checkpoint_level
+    world1_level = clamp(checkpoint_level, 1, world1_level_count)
     world1_mode = checkpoint_world == 1
-    world1_underground_mode = false
+    world1_underground_mode = world1_mode and checkpoint_position.x > 3600
+    world1_ready = false if not world1_mode else world1_ready
+    enemy_alive = true
+    enemy_x = 2820.0 if not world1_mode else (3420.0 if world1_level == 20 else 2820.0)
+    enemy_direction = -1
+    guardian_hits = 0
+    if not world1_mode:
+        checkpoint_world = 0
+        checkpoint_level = 1
     world1_level_completed = false
     dialogue_active = false
     dialogue_resume_guard = false
@@ -2278,12 +2364,18 @@ func _restart_from_checkpoint():
         world1_door_shape.disabled = true
     if world1_underground_gate_shape != null:
         world1_underground_gate_shape.disabled = false
-    _rebuild_level_geometry()
+    if world1_mode:
+        _rebuild_level_geometry()
+    else:
+        _clear_level_geometry()
     var player = get_node_or_null("Stikman")
     if player != null:
         player.position = checkpoint_position
         player.velocity = Vector2.ZERO
         player.set_physics_process(true)
+        var camera = player.get_node_or_null("Camera2D")
+        if camera != null:
+            camera.limit_right = 4700 if world1_underground_mode else 3600
     health = 3
     game_over = false
     paused = false
