@@ -27,6 +27,8 @@ var world1_platform_speed = 70.0
 var world1_box_on_switch = false
 var world1_secret_gate_open = false
 var world1_platform_unlocked = false
+var world1_platform_body = null
+var world1_platform_shape = null
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -76,6 +78,7 @@ func _ready():
     _create_coins()
     _create_exit()
     _create_world1_door()
+    _create_world1_platform()
     _update_ui()
     update()
 
@@ -394,6 +397,7 @@ func _update_world1_environment(delta):
         world1_platform_unlocked = true
     if world1_platform_unlocked:
         world1_platform_x += world1_platform_direction * world1_platform_speed * delta
+    _sync_world1_platform_collision()
     if world1_platform_x >= 2650:
         world1_platform_x = 2650
         world1_platform_direction = -1
@@ -628,6 +632,26 @@ func _create_coins():
         add_child(area)
 
         area.connect("body_entered", self, "_on_collectible_body_entered", [area])
+
+func _create_world1_platform():
+    world1_platform_body = KinematicBody2D.new()
+    world1_platform_body.name = "PlataformaMovil"
+    add_child(world1_platform_body)
+
+    world1_platform_shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(70, 9)
+    world1_platform_shape.shape = rect
+    world1_platform_body.add_child(world1_platform_shape)
+
+    world1_platform_shape.disabled = true
+    world1_platform_body.position = Vector2(world1_platform_x, 309)
+
+func _sync_world1_platform_collision():
+    if world1_platform_body == null:
+        return
+    world1_platform_body.position = Vector2(world1_platform_x, 309)
+    world1_platform_shape.disabled = not world1_platform_unlocked
 
 func _create_world1_door():
     world1_door_body = StaticBody2D.new()
