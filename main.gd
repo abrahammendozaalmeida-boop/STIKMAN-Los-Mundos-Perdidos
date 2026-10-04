@@ -1247,44 +1247,80 @@ func _draw():
         _draw_world1()
         return
 
-    # Cielo y ambiente
-    draw_rect(Rect2(0, 0, 3600, 540), Color("#10261b"))
-    draw_circle(Vector2(700, 90), 58, Color("#d9e7c8"))
+    # Cielo y ambiente: varias capas para que la selva tenga profundidad.
+    draw_rect(Rect2(0, 0, 3600, 540), Color("#0b1d17"))
+    draw_circle(Vector2(760, 78), 72, Color(0.82, 0.91, 0.72, 0.82))
+    draw_circle(Vector2(760, 78), 110, Color(0.75, 0.9, 0.68, 0.08))
 
-    # Neblina lejana
-    draw_circle(Vector2(420, 250), 110, Color(0.18, 0.35, 0.23, 0.18))
-    draw_circle(Vector2(1450, 220), 150, Color(0.18, 0.35, 0.23, 0.16))
-    draw_circle(Vector2(2700, 210), 180, Color(0.18, 0.35, 0.23, 0.14))
-
-    # Montañas
-    var mountains = PoolVector2Array([
-        Vector2(0, 360), Vector2(250, 170), Vector2(480, 360),
-        Vector2(720, 145), Vector2(980, 360), Vector2(1250, 180),
-        Vector2(1540, 360), Vector2(1800, 150), Vector2(2100, 360),
-        Vector2(2400, 180), Vector2(2700, 360), Vector2(3000, 160),
-        Vector2(3300, 360), Vector2(3600, 180), Vector2(3600, 540),
-        Vector2(0, 540)
+    # Montanas lejanas y niebla.
+    var mountains_back = PoolVector2Array([
+        Vector2(0, 340), Vector2(260, 205), Vector2(520, 340),
+        Vector2(850, 175), Vector2(1190, 340), Vector2(1510, 195),
+        Vector2(1840, 340), Vector2(2180, 170), Vector2(2540, 340),
+        Vector2(2870, 190), Vector2(3200, 340), Vector2(3600, 170),
+        Vector2(3600, 540), Vector2(0, 540)
     ])
-    draw_colored_polygon(mountains, Color("#173a28"))
+    draw_colored_polygon(mountains_back, Color("#123126"))
+    draw_circle(Vector2(420, 270), 145, Color(0.34, 0.58, 0.42, 0.10))
+    draw_circle(Vector2(1450, 235), 190, Color(0.34, 0.58, 0.42, 0.09))
+    draw_circle(Vector2(2700, 245), 220, Color(0.34, 0.58, 0.42, 0.08))
 
-    # Suelo
-    draw_rect(Rect2(0, 430, 3600, 110), Color("#3b291c"))
-    draw_rect(Rect2(0, 430, 3600, 12), Color("#4f7a35"))
+    # Siluetas de arboles del fondo.
+    for x in range(80, 3600, 310):
+        var bx = float(x) + sin(float(x) * 0.021) * 28.0
+        draw_rect(Rect2(bx, 275, 18, 155), Color("#193c2c"))
+        draw_circle(Vector2(bx + 9, 245), 48, Color("#1b4931"))
 
-    # Arboles
+    # Suelo con capas, piedras y pequenas variaciones.
+    draw_rect(Rect2(0, 430, 3600, 110), Color("#302217"))
+    draw_rect(Rect2(0, 430, 3600, 10), Color("#52763b"))
+    draw_line(Vector2(0, 448), Vector2(3600, 448), Color("#46321f"), 3)
+    for x in range(40, 3600, 170):
+        var grass_x = float(x) + sin(float(x) * 0.09) * 12.0
+        draw_line(Vector2(grass_x, 442), Vector2(grass_x - 5, 430), Color("#6a8f45"), 3)
+        draw_line(Vector2(grass_x + 5, 442), Vector2(grass_x + 10, 430), Color("#456d37"), 2)
+
+    # Arboles cercanos, con tronco, ramas y copas en varias capas.
     for x in range(60, 3600, 230):
         var offset = sin(float(x) * 0.03) * 35
-        draw_rect(Rect2(x + offset, 250, 28, 180), Color("#2b1c14"))
-        draw_circle(Vector2(x + offset + 14, 220), 62, Color("#24502f"))
-        draw_circle(Vector2(x + offset - 25, 245), 45, Color("#2d6037"))
-        draw_circle(Vector2(x + offset + 48, 250), 48, Color("#2a5a34"))
+        var trunk_x = float(x) + offset
+        draw_rect(Rect2(trunk_x, 245, 28, 185), Color("#241811"))
+        draw_rect(Rect2(trunk_x + 7, 255, 8, 175), Color("#49301d"))
+        draw_line(Vector2(trunk_x + 14, 310), Vector2(trunk_x - 28, 275), Color("#2b1b13"), 9)
+        draw_line(Vector2(trunk_x + 14, 330), Vector2(trunk_x + 55, 290), Color("#2b1b13"), 8)
+        draw_circle(Vector2(trunk_x + 14, 214), 66, Color("#1d492c"))
+        draw_circle(Vector2(trunk_x - 25, 238), 49, Color("#285c35"))
+        draw_circle(Vector2(trunk_x + 52, 245), 52, Color("#245331"))
+        draw_circle(Vector2(trunk_x + 12, 188), 38, Color("#316b3d"))
 
-    # Rocas y troncos
-    draw_circle(Vector2(360, 414), 25, Color("#5a5145"))
+    # Vegetacion de primer plano: hojas, helechos y rocas.
+    for x in range(110, 3600, 280):
+        var fx = float(x) + sin(float(x) * 0.04) * 18.0
+        draw_line(Vector2(fx, 430), Vector2(fx - 22, 397), Color("#315c32"), 7)
+        draw_line(Vector2(fx, 430), Vector2(fx + 25, 391), Color("#3b713a"), 7)
+        draw_line(Vector2(fx, 418), Vector2(fx - 34, 408), Color("#4b8240"), 5)
+        draw_line(Vector2(fx, 414), Vector2(fx + 36, 404), Color("#477b3d"), 5)
+
+    draw_circle(Vector2(360, 414), 25, Color("#51493f"))
     draw_circle(Vector2(520, 420), 18, Color("#665b4b"))
-    draw_rect(Rect2(1110, 390, 110, 28), Color("#5b351f"))
-    draw_circle(Vector2(1600, 414), 24, Color("#5a5145"))
-    draw_rect(Rect2(2630, 397, 125, 26), Color("#5b351f"))
+    draw_circle(Vector2(1600, 414), 24, Color("#51493f"))
+    draw_circle(Vector2(2050, 417), 20, Color("#62584a"))
+    draw_rect(Rect2(1110, 390, 110, 28), Color("#50301c"))
+    draw_rect(Rect2(2630, 397, 125, 26), Color("#50301c"))
+
+    # Enredaderas colgantes para reforzar la profundidad.
+    for x in range(180, 3500, 420):
+        var vine_x = float(x) + sin(float(x) * 0.05) * 14.0
+        var vine_len = 55.0 + fmod(float(x), 90.0)
+        draw_line(Vector2(vine_x, 205), Vector2(vine_x + 12, 205 + vine_len), Color("#356a38"), 5)
+        draw_circle(Vector2(vine_x + 12, 205 + vine_len), 7, Color("#4f8a43"))
+
+    # Particulas luminosas muy ligeras: ambiente, no gameplay.
+    for i in range(18):
+        var px = fmod(float(i * 197) + elapsed * (8.0 + float(i % 3) * 2.0), 3500.0) + 50.0
+        var py = 155.0 + fmod(float(i * 83) + elapsed * 4.0, 230.0)
+        var glow = 0.25 + 0.15 * sin(elapsed * 2.0 + float(i))
+        draw_circle(Vector2(px, py), 3.0, Color(0.76, 0.92, 0.55, glow))
 
     # Peligros
     for p in hazard_positions:
