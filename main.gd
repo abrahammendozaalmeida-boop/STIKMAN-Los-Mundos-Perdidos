@@ -239,6 +239,11 @@ func _ready():
     update()
 
 func _process(delta):
+    var player = get_node_or_null("Stikman")
+    if game_started and not game_over and not finished and player != null and player.position.y > 620:
+        _trigger_game_over(player)
+        return
+
     _update_moving_level_objects(delta)
     _check_level_completion()
     _update_dialogue(delta)
@@ -384,6 +389,28 @@ func _menu_new_game():
     _reset_game_state()
     _delete_save()
     _start_game()
+
+func _show_game_over_menu():
+    game_over = true
+    paused = true
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.velocity = Vector2.ZERO
+        player.set_physics_process(false)
+    _clear_menu_buttons()
+    menu_panel.visible = true
+    menu_title.text = "HAS CAIDO"
+    menu_info.text = "El progreso del nivel se conserva.\nCheckpoint: NIVEL %d" % checkpoint_level
+    _add_menu_button("REAPARECER EN CHECKPOINT", "_menu_respawn", 175)
+    _add_menu_button("MENU PRINCIPAL", "_menu_main_after_death", 230)
+    _update_ui()
+
+func _menu_respawn():
+    _restart_from_checkpoint()
+
+func _menu_main_after_death():
+    _save_game()
+    _show_main_menu()
 
 func _show_pause_menu():
     paused = true
@@ -864,8 +891,7 @@ func _check_enemy_contact():
         player.velocity = Vector2.ZERO
 
         if health <= 0:
-            game_over = true
-            player.set_physics_process(false)
+            _trigger_game_over(player)
 
 
 func _check_level_completion():
@@ -1293,6 +1319,44 @@ func _draw_world1():
     draw_rect(Rect2(0, 430, 3600, 110), Color("#45484d"))
     draw_rect(Rect2(0, 430, 3600, 12), Color("#c6c8c9"))
 
+    # Visuales de plataformas del nivel: usan exactamente los mismos datos que las colisiones.
+    var layout = level_layouts[clamp(world1_level - 1, 0, level_layouts.size() - 1)]
+    for item in layout:
+        var platform_rect = Rect2(item[0] - item[2] / 2.0, item[1] - item[3] / 2.0, item[2], item[3])
+        draw_rect(platform_rect, Color("#26332b"))
+        draw_rect(Rect2(platform_rect.position, Vector2(platform_rect.size.x, 5)), Color("#56a36f"))
+        draw_line(
+            platform_rect.position + Vector2(10, platform_rect.size.y - 3),
+            platform_rect.position + Vector2(platform_rect.size.x - 10, platform_rect.size.y - 3),
+            Color("#151c18"),
+            2
+        )
+
+    # Visuales de interruptores, barreras y obstaculos moviles.
+    var interactive_parent = get_node_or_null("LevelInteractives")
+    if interactive_parent != null:
+        for interactive in interactive_parent.get_children():
+            if interactive.has_meta("barrier_id"):
+                var bx = interactive.position.x
+                var by = interactive.position.y
+                var open_now = world1_switch_activated
+                draw_rect(Rect2(bx - 14, by - 65, 28, 130), Color("#4b555d") if not open_now else Color(0.25, 0.8, 0.65, 0.28))
+                draw_rect(Rect2(bx - 8, by - 55, 16, 110), Color("#7b8790") if not open_now else Color("#2d806a"))
+            elif interactive.has_meta("switch_id"):
+                var sx = interactive.position.x
+                var sy = interactive.position.y
+                draw_circle(Vector2(sx, sy), 30, Color(0.1, 0.75, 0.85, 0.18))
+                draw_rect(Rect2(sx - 20, sy - 18, 40, 36), Color("#343b40"))
+                draw_circle(Vector2(sx, sy), 11, Color("#7dffe8") if world1_switch_activated else Color("#ffbd45"))
+                draw_string(Control.new().get_theme_default_font(), Vector2(sx - 48, sy - 40), "ACTIVAR", Color("#d8fbff"))
+            elif interactive.has_meta("start_x"):
+                var mx = interactive.position.x
+                var my = interactive.position.y
+                draw_rect(Rect2(mx - 55, my - 12, 110, 24), Color("#59636b"))
+                draw_rect(Rect2(mx - 48, my - 7, 96, 6), Color("#e0b44c"))
+                draw_circle(Vector2(mx - 38, my + 8), 4, Color("#1a2024"))
+                draw_circle(Vector2(mx + 38, my + 8), 4, Color("#1a2024"))
+
     for x in range(40, 3600, 120):
         draw_rect(Rect2(x, 480, 65, 8), Color("#e7d86d"))
 
@@ -1569,10 +1633,18 @@ func _on_hazard_body_entered(body):
     body.velocity = Vector2.ZERO
 
     if health <= 0:
-        game_over = true
-        body.set_physics_process(false)
+        _trigger_game_over(body)
+    else:
+        _update_ui()
 
-    _update_ui()
+func _trigger_game_over(body):
+    if game_over or finished:
+        return
+    game_over = true
+    body.velocity = Vector2.ZERO
+    body.set_physics_process(false)
+    _save_game()
+    _show_game_over_menu()
 
 func _on_collectible_body_entered(body, area):
     if body.name != "Stikman" or game_over or finished:
@@ -1829,7 +1901,9 @@ func _restart_from_checkpoint():
     health = 3
     game_over = false
     paused = false
+    dialogue_active = false
     menu_panel.visible = false
+    _clear_menu_buttons()
     checkpoint_message_timer = 2.0
     _update_ui()
     update()
