@@ -29,6 +29,8 @@ var world1_secret_gate_open = false
 var world1_platform_unlocked = false
 var world1_platform_body = null
 var world1_platform_shape = null
+var world1_rooftop_discovered = false
+var world1_rooftop_message_shown = false
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -86,6 +88,7 @@ func _process(delta):
     _update_dialogue(delta)
     if world1_mode and not dialogue_active:
         _update_world1_environment(delta)
+        _check_world1_rooftop()
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -356,6 +359,22 @@ func _check_world1_interactions():
         _update_ui()
         update()
 
+func _check_world1_rooftop():
+    var player = get_node_or_null("Stikman")
+    if player == null or world1_rooftop_discovered:
+        return
+    # La plataforma lleva a una zona elevada con una señal misteriosa.
+    if player.position.x > 2380 and player.position.x < 2750 and player.position.y < 285:
+        world1_rooftop_discovered = true
+        message_timer = 3.0
+        _start_dialogue("STIKMAN", [
+            "¿Que es eso?",
+            "Esta señal no pertenece a ninguna de las tres estaciones.",
+            "Alguien estuvo manipulando la energia de esta ciudad.",
+            "Tengo que descubrir quien lo hizo."
+        ])
+        update()
+
 func _update_world1_environment(delta):
     var player = get_node_or_null("Stikman")
     if player == null:
@@ -584,6 +603,14 @@ func _draw_world1():
 
     draw_rect(Rect2(world1_platform_x - 70, 300, 140, 18), Color("#59636b"))
     draw_rect(Rect2(world1_platform_x - 70, 300, 140, 5), Color("#62d9ff"))
+
+    # Zona elevada descubierta con la plataforma.
+    if world1_rooftop_discovered:
+        draw_rect(Rect2(2380, 245, 330, 18), Color("#343f46"))
+        draw_rect(Rect2(2380, 245, 330, 5), Color("#56e0ff"))
+        draw_circle(Vector2(2635, 220), 18, Color("#b9f8ff"))
+        draw_circle(Vector2(2635, 220), 9, Color("#ffffff"))
+        draw_string(ThemeDB.fallback_font, Vector2(2420, 230), "SEÑAL DESCONOCIDA", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#d8fbff"))
 
     # Interruptor final.
     draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
