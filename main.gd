@@ -4,6 +4,8 @@ var coins = 0
 var health = 3
 var game_over = false
 var finished = false
+var victory_timer = 0.0
+var world1_ready = false
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -50,6 +52,10 @@ func _process(delta):
             damage_cooldown -= delta
         if guardian_hit_cooldown > 0:
             guardian_hit_cooldown -= delta
+        if victory_timer > 0:
+            victory_timer -= delta
+            if victory_timer <= 0:
+                world1_ready = true
 
         _update_enemy(delta)
         _check_attack()
@@ -82,7 +88,8 @@ func _check_attack():
             message_timer = 0.8
             if guardian_hits >= guardian_max_hits:
                 enemy_alive = false
-                message_timer = 1.5
+                victory_timer = 2.5
+                message_timer = 2.5
 
 func _check_enemy_contact():
     if not enemy_alive or damage_cooldown > 0:
@@ -271,6 +278,11 @@ func _on_exit_body_entered(body):
         _update_ui()
         return
 
+    if not world1_ready:
+        message_timer = 1.0
+        _update_ui()
+        return
+
     finished = true
     body.set_physics_process(false)
     _update_ui()
@@ -288,12 +300,16 @@ func _update_ui():
     if game_over:
         hud.get_node("Message").text = "HAS CAIDO EN LA SELVA\nPulsa F5 para volver a intentarlo"
     elif finished:
-        hud.get_node("Message").text = "¡HAS ENCONTRADO EL PORTAL!\nMUNDO 1: MUNDO NORMAL DESBLOQUEADO"
+        hud.get_node("Message").text = "¡MUNDO 1 DESBLOQUEADO!\nBIENVENIDO AL MUNDO NORMAL"
+    elif victory_timer > 0:
+        hud.get_node("Message").text = "¡GUARDIAN DERROTADO!\nEL PORTAL SE ESTA ABRIENDO..."
     elif message_timer > 0:
-        if enemy_alive:
+        if not enemy_alive and not world1_ready:
+            hud.get_node("Message").text = "¡GUARDIAN DERROTADO!\nACERCATE AL PORTAL"
+        elif enemy_alive:
             hud.get_node("Message").text = "PORTAL BLOQUEADO\n¡DERROTA AL GUARDIAN PRIMERO!"
         else:
-            hud.get_node("Message").text = "¡ENEMIGO DERROTADO!"
+            hud.get_node("Message").text = "¡GUARDIAN DERROTADO!"
     elif enemy_alive:
         hud.get_node("Message").text = "¡GUARDIAN ADELANTE!  J para atacar  |  ENERGIA: %d/%d" % [guardian_max_hits - guardian_hits, guardian_max_hits]
     else:
