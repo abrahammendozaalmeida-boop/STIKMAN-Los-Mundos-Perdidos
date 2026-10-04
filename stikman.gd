@@ -14,6 +14,13 @@ func _ready():
     update()
 
 func _physics_process(delta):
+    var game = get_parent()
+    var dialogue_locked = game != null and game.dialogue_active
+    if dialogue_locked:
+        velocity = Vector2.ZERO
+        update()
+        return
+
     attacking = Input.is_key_pressed(KEY_J)
 
     var direction = 0
@@ -46,7 +53,8 @@ func _physics_process(delta):
         velocity.y += gravity * delta
 
     velocity = move_and_slide(velocity, Vector2.UP)
-    position.x = clamp(position.x, 40, 3500)
+    var max_x = 4700 if (game != null and game.world1_underground_mode) else 3500
+    position.x = clamp(position.x, 40, max_x)
     update()
 
 func _draw():
