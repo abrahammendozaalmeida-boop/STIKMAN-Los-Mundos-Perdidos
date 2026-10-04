@@ -26,6 +26,11 @@ move_right={
 "events": [Object(InputEventKey,"scancode":68), Object(InputEventKey,"scancode":16777233)]
 }
 
+attack={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":74)]
+}
+
 jump={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"scancode":32)]
