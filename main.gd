@@ -203,6 +203,7 @@ var owned_outfits = [true, false, false, false]
 var outfit_names = ["Clasico", "Azul", "Rojo", "Explorador"]
 var outfit_costs = [0, 25, 50, 75]
 var draw_font = null
+var dialogue_resume_guard = false
 
 var hazard_positions = [
     Vector2(930, 412),
@@ -251,6 +252,10 @@ func _process(delta):
     _update_moving_level_objects(delta)
     _check_level_completion()
     _update_dialogue(delta)
+    if dialogue_resume_guard:
+        dialogue_resume_guard = false
+        update()
+        return
     if game_started and not paused:
         auto_save_timer += delta
         if auto_save_timer >= 20.0:
@@ -825,13 +830,33 @@ func _on_dialogue_skip():
         _finish_dialogue()
 
 func _finish_dialogue():
+    # El dialogo termina durante un evento de UI. Dejamos un frame de
+    # transicion antes de reanudar fisica, colisiones y comprobaciones del nivel.
+    # Esto evita que el cierre del panel coincida con la reanudacion del jugador.
     dialogue_active = false
+    dialogue_resume_guard = true
     dialogue_lines = []
     dialogue_index = 0
     dialogue_char_index = 0
+    dialogue_char_timer = 0.0
+    dialogue_can_advance = false
     var panel = get_node_or_null("DialogueLayer/DialoguePanel")
     if panel != null:
         panel.visible = false
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.velocity = Vector2.ZERO
+        player.set_physics_process(false)
+    call_deferred("_resume_after_dialogue")
+
+func _resume_after_dialogue():
+    if not is_inside_tree():
+        return
+    var player = get_node_or_null("Stikman")
+    if player != null and game_started and not paused and not game_over and not finished:
+        player.set_physics_process(true)
+        player.velocity = Vector2.ZERO
+    update()
 
 func _start_prologue_dialogue():
     _start_dialogue("STIKMAN", [
