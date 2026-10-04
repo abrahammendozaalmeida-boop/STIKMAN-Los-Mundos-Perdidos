@@ -994,12 +994,9 @@ func _complete_world1_level(next_position):
     if world1_level < world1_level_count:
         var next_level = world1_level + 1
         level_select_unlocked = max(level_select_unlocked, next_level)
+        # El siguiente nivel ya contiene su propio dialogo de entrada.
+        # Evitamos iniciar dos dialogos seguidos en el mismo frame.
         _start_world1_level(next_level)
-        _start_dialogue("STIKMAN", [
-            "Lo que encontre aqui no termina en esta zona.",
-            "La pista continua justo delante.",
-            "Tengo que seguir antes de que vuelva a desaparecer."
-        ])
     else:
         finished = true
         _save_game()
@@ -1945,6 +1942,20 @@ func _clear_level_geometry():
 
 func _reset_level_interactive_state():
     world1_switch_activated = false
+    world1_box_dialogue_shown = false
+    world1_platform_x = 2550.0
+    world1_platform_direction = 1.0
+    if world1_box_body != null:
+        world1_box_body.position = world1_box_position
+        world1_box_body.velocity = Vector2.ZERO
+    if world1_platform_body != null:
+        world1_platform_body.position = Vector2(world1_platform_x, 309)
+    if world1_platform_shape != null:
+        world1_platform_shape.disabled = true
+    if world1_door_shape != null:
+        world1_door_shape.disabled = true
+    if world1_underground_gate_shape != null:
+        world1_underground_gate_shape.disabled = false
 
 func _build_interactive_level_objects():
     var parent = Node2D.new()
@@ -2100,6 +2111,20 @@ func _start_world1_level(level_number):
     world1_underground_mode = false
     world1_underground_lever_activated = false
     world1_underground_generator_activated = false
+    world1_box_position = Vector2(1800, 390)
+    world1_platform_x = 2550.0
+    world1_platform_direction = 1.0
+    if world1_box_body != null:
+        world1_box_body.position = world1_box_position
+        world1_box_body.velocity = Vector2.ZERO
+    if world1_platform_body != null:
+        world1_platform_body.position = Vector2(world1_platform_x, 309)
+    if world1_platform_shape != null:
+        world1_platform_shape.disabled = true
+    if world1_door_shape != null:
+        world1_door_shape.disabled = true
+    if world1_underground_gate_shape != null:
+        world1_underground_gate_shape.disabled = false
     if world1_level == 20:
         enemy_alive = true
         enemy_x = 3420.0
@@ -2125,7 +2150,31 @@ func _start_world1_level(level_number):
 func _restart_from_checkpoint():
     world1_level = checkpoint_level
     world1_mode = true
+    world1_underground_mode = false
     world1_level_completed = false
+    world1_box_position = Vector2(1800, 390)
+    world1_platform_x = 2550.0
+    world1_platform_direction = 1.0
+    world1_switch_activated = false
+    world1_door_open = false
+    world1_key_collected = false
+    world1_box_moved = false
+    world1_box_on_switch = false
+    world1_secret_gate_open = false
+    world1_platform_unlocked = false
+    world1_underground_lever_activated = false
+    world1_underground_generator_activated = false
+    if world1_box_body != null:
+        world1_box_body.position = world1_box_position
+        world1_box_body.velocity = Vector2.ZERO
+    if world1_platform_body != null:
+        world1_platform_body.position = Vector2(world1_platform_x, 309)
+    if world1_platform_shape != null:
+        world1_platform_shape.disabled = true
+    if world1_door_shape != null:
+        world1_door_shape.disabled = true
+    if world1_underground_gate_shape != null:
+        world1_underground_gate_shape.disabled = false
     _rebuild_level_geometry()
     var player = get_node_or_null("Stikman")
     if player != null:
