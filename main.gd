@@ -1503,6 +1503,8 @@ func _draw_world1():
                 draw_rect(Rect2(mx - 46, my - 6, 92, 5), Color("#b8a66d"))
 
 func _draw_world1_level_story():
+    if draw_font == null:
+        return
     # Cada subnivel reutiliza la misma ciudad, pero cambia el foco visual
     # para que el jugador entienda donde esta y por que debe avanzar.
     var level = world1_level
@@ -1659,6 +1661,8 @@ func _draw_world1_level_story():
             draw_arc(Vector2(enemy_x, 320), 47 + sin(elapsed * 8.0) * 3.0, 0, PI * 2, 28, Color("#65dbe4"), 3)
 
 func _draw_world1_underground():
+    if draw_font == null:
+        return
 
     draw_rect(Rect2(3600, 0, 1100, 540), Color("#10171d"))
     draw_rect(Rect2(3600, 0, 1100, 430), Color("#18242b"))
