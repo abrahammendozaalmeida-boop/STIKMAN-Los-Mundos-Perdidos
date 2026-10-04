@@ -6,6 +6,7 @@ var game_over = false
 var finished = false
 var victory_timer = 0.0
 var world1_ready = false
+var world1_unlocked = false
 var world1_mode = false
 var world1_portal_x = 3300.0
 var world1_items = 0
@@ -484,7 +485,7 @@ func _menu_world_map():
     menu_title.text = "MAPA DE MUNDOS"
     menu_info.text = "Cada mundo conserva su propia zona y progreso."
     _add_menu_button("PROLOGO • LA SELVA", "_map_enter_jungle", 135)
-    var city_unlocked = checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
+    var city_unlocked = world1_unlocked or checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
     var city_label = "MUNDO 1 • LA CIUDAD" if city_unlocked else "MUNDO 1 • LA CIUDAD (BLOQUEADO)"
     _add_menu_button(city_label, "_map_enter_city", 185)
     _add_menu_button("MUNDO 2 • UNIVERSO ROTO (PRÓXIMAMENTE)", "_map_locked_world", 235)
@@ -674,6 +675,7 @@ func _save_game():
         "world1_signal_collected": world1_signal_collected,
         "world1_terminal_activated": world1_terminal_activated,
         "world1_ready": world1_ready,
+        "world1_unlocked": world1_unlocked,
         "world1_key_collected": world1_key_collected,
         "world1_door_open": world1_door_open,
         "world1_switch_activated": world1_switch_activated,
@@ -721,6 +723,7 @@ func _load_save():
     world1_signal_collected = parsed.get("world1_signal_collected", world1_signal_collected)
     world1_terminal_activated = parsed.get("world1_terminal_activated", world1_terminal_activated)
     world1_ready = bool(parsed.get("world1_ready", world1_ready))
+    world1_unlocked = bool(parsed.get("world1_unlocked", world1_mode or checkpoint_world == 1 or level_select_unlocked > 1))
     world1_key_collected = bool(parsed.get("world1_key_collected", false))
     world1_door_open = bool(parsed.get("world1_door_open", false))
     world1_switch_activated = bool(parsed.get("world1_switch_activated", false))
@@ -761,6 +764,7 @@ func _reset_game_state():
     # Una partida nueva siempre comienza en la selva/prologo.
     world1_mode = false
     world1_ready = false
+    world1_unlocked = false
     world1_level = 1
     world1_items = 0
     world1_signal_collected = [false, false, false]
@@ -1508,6 +1512,8 @@ func _draw_world1():
         var h = 135 + int(abs(sin(float(x) * 0.031)) * 115)
         var facade = Color("#6b7072") if int(x / 280) % 2 == 0 else Color("#777b7b")
         draw_rect(Rect2(x, 430 - h, 205, h), facade)
+        if city_concrete_texture != null:
+            draw_texture_rect(city_concrete_texture, Rect2(x, 430 - h, 205, h), true, Color(1, 1, 1, 0.30))
         draw_rect(Rect2(x + 10, 430 - h, 185, 6), Color("#4e5457"))
         for row in range(4):
             for col in range(4):
@@ -1518,6 +1524,8 @@ func _draw_world1():
 
     # Edificios funcionales destacados: estacion, control y subestacion.
     draw_rect(Rect2(360, 300, 250, 130), Color("#555d61"))
+    if city_metal_texture != null:
+        draw_texture_rect(city_metal_texture, Rect2(360, 300, 250, 130), true, Color(1, 1, 1, 0.22))
     draw_rect(Rect2(375, 315, 220, 18), Color("#30383c"))
     draw_rect(Rect2(395, 350, 175, 58), Color("#3e484d"))
     for x in range(405, 565, 32):
@@ -2076,6 +2084,7 @@ func _on_exit_body_entered(body):
     if not world1_mode:
         world1_mode = true
         world1_ready = false
+        world1_unlocked = true
         checkpoint_position = Vector2(220, 350)
         checkpoint_level = 1
         checkpoint_world = 1
