@@ -7,28 +7,34 @@
 extents = Vector2(18, 48)
 
 [sub_resource type="RectangleShape2D" id=2]
-extents = Vector2(1500, 55)
+extents = Vector2(1800, 55)
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2(35, 22)
+extents = Vector2(55, 22)
 
 [node name="MundoSelva" type="Node2D"]
 script = ExtResource(1)
 
 [node name="Suelo" type="StaticBody2D" parent="."]
-position = Vector2(1500, 485)
+position = Vector2(1800, 485)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Suelo"]
 shape = SubResource(2)
 
 [node name="Obstaculo1" type="StaticBody2D" parent="."]
-position = Vector2(655, 408)
+position = Vector2(1165, 408)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Obstaculo1"]
 shape = SubResource(3)
 
+[node name="Obstaculo2" type="StaticBody2D" parent="."]
+position = Vector2(2690, 410)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Obstaculo2"]
+shape = SubResource(3)
+
 [node name="Stikman" type="KinematicBody2D" parent="."]
-position = Vector2(260, 380)
+position = Vector2(180, 430)
 script = ExtResource(2)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Stikman"]
@@ -40,5 +46,77 @@ position = Vector2(0, -80)
 current = true
 limit_left = 0
 limit_top = 0
-limit_right = 3000
+limit_right = 3600
 limit_bottom = 540
+drag_margin_h = 0.1
+drag_margin_v = 0.1
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TopPanel" type="ColorRect" parent="HUD"]
+margin_right = 960.0
+margin_bottom = 88.0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Title" type="Label" parent="HUD"]
+margin_left = 22.0
+margin_top = 10.0
+margin_right = 650.0
+margin_bottom = 34.0
+text = "STIKMAN - LOS MUNDOS PERDIDOS"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="World" type="Label" parent="HUD"]
+margin_left = 22.0
+margin_top = 39.0
+margin_right = 400.0
+margin_bottom = 64.0
+text = "PROLOGO: LA SELVA"
+theme_override_colors/font_color = Color(0.62, 0.91, 0.44, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Stats" type="Label" parent="HUD"]
+margin_left = 650.0
+margin_top = 12.0
+margin_right = 940.0
+margin_bottom = 38.0
+text = "VIDA: 3/3     CRISTALES: 0/9"
+align = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="Timer" type="Label" parent="HUD"]
+margin_left = 650.0
+margin_top = 40.0
+margin_right = 940.0
+margin_bottom = 64.0
+text = "TIEMPO: 00:00"
+align = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="Message" type="Label" parent="HUD"]
+margin_left = 190.0
+margin_top = 105.0
+margin_right = 770.0
+margin_bottom = 160.0
+text = "Encuentra el portal al final de la selva"
+align = 1
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="Controls" type="Label" parent="HUD"]
+margin_left = 20.0
+margin_top = 500.0
+margin_right = 650.0
+margin_bottom = 530.0
+text = "A/D o FLECHAS: mover    SHIFT: correr    ESPACIO: saltar"
+theme_override_font_sizes/font_size = 15
+
+[node name="Goal" type="Label" parent="HUD"]
+margin_left = 700.0
+margin_top = 500.0
+margin_right = 940.0
+margin_bottom = 530.0
+text = "OBJETIVO: encontrar el portal"
+align = 2
+theme_override_font_sizes/font_size = 15
