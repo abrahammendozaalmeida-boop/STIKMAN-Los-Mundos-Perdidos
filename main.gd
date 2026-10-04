@@ -26,6 +26,7 @@ var world1_platform_direction = 1.0
 var world1_platform_speed = 70.0
 var world1_box_on_switch = false
 var world1_secret_gate_open = false
+var world1_platform_unlocked = false
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -383,12 +384,16 @@ func _update_world1_environment(delta):
                 _start_dialogue("STIKMAN", [
                     "¡Escuche algo!",
                     "La caja activo una placa oculta.",
-                    "El camino acaba de cambiar..."
+                    "La plataforma de arriba acaba de encenderse.",
+                    "Ahora puedo usarla para cruzar."
                 ])
             update()
 
-    # Plataforma movil: va y vuelve entre dos puntos.
-    world1_platform_x += world1_platform_direction * world1_platform_speed * delta
+    # La plataforma se desbloquea al resolver la placa.
+    if world1_secret_gate_open:
+        world1_platform_unlocked = true
+    if world1_platform_unlocked:
+        world1_platform_x += world1_platform_direction * world1_platform_speed * delta
     if world1_platform_x >= 2650:
         world1_platform_x = 2650
         world1_platform_direction = -1
