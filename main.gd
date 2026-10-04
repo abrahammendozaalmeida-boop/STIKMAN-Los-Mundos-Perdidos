@@ -6,6 +6,11 @@ var game_over = false
 var finished = false
 var elapsed = 0.0
 var message_timer = 0.0
+var enemy_alive = true
+var enemy_x = 2820.0
+var enemy_direction = -1
+var enemy_speed = 80.0
+var damage_cooldown = 0.0
 
 var hazard_positions = [
     Vector2(930, 412),
@@ -38,8 +43,55 @@ func _process(delta):
         elapsed += delta
         if message_timer > 0:
             message_timer -= delta
+        if damage_cooldown > 0:
+            damage_cooldown -= delta
+
+        _update_enemy(delta)
+        _check_attack()
+        _check_enemy_contact()
         _update_ui()
     update()
+
+func _update_enemy(delta):
+    if not enemy_alive:
+        return
+
+    enemy_x += enemy_direction * enemy_speed * delta
+    if enemy_x <= 2680:
+        enemy_x = 2680
+        enemy_direction = 1
+    elif enemy_x >= 2920:
+        enemy_x = 2920
+        enemy_direction = -1
+
+func _check_attack():
+    if not enemy_alive:
+        return
+
+    if Input.is_key_pressed(KEY_J):
+        var player = get_node_or_null("Stikman")
+        if player != null and abs(player.position.x - enemy_x) < 115 and abs(player.position.y - 350) < 120:
+            enemy_alive = false
+            message_timer = 1.2
+
+func _check_enemy_contact():
+    if not enemy_alive or damage_cooldown > 0:
+        return
+
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+
+    if abs(player.position.x - enemy_x) < 55 and abs(player.position.y - 350) < 105:
+        health -= 1
+        damage_cooldown = 1.2
+        message_timer = 1.5
+        player.position = Vector2(max(100, player.position.x - 120), 350)
+        player.velocity = Vector2.ZERO
+
+        if health <= 0:
+            game_over = true
+            player.set_physics_process(false)
 
 func _draw():
     # Cielo y ambiente
@@ -93,6 +145,17 @@ func _draw():
             Vector2(p.x + 17, 388),
             Vector2(p.x + 30, 430)
         ]), Color("#d05042"))
+
+    # Primer enemigo de la selva
+    if enemy_alive:
+        draw_circle(Vector2(enemy_x, 350), 30, Color("#2a1b17"))
+        draw_circle(Vector2(enemy_x, 320), 20, Color("#3b2520"))
+        draw_circle(Vector2(enemy_x - 8, 318), 4, Color("#ffcf55"))
+        draw_circle(Vector2(enemy_x + 8, 318), 4, Color("#ffcf55"))
+        draw_line(Vector2(enemy_x - 18, 350), Vector2(enemy_x - 38, 375), Color("#2a1b17"), 8)
+        draw_line(Vector2(enemy_x + 18, 350), Vector2(enemy_x + 38, 375), Color("#2a1b17"), 8)
+        draw_line(Vector2(enemy_x - 12, 375), Vector2(enemy_x - 20, 410), Color("#2a1b17"), 9)
+        draw_line(Vector2(enemy_x + 12, 375), Vector2(enemy_x + 20, 410), Color("#2a1b17"), 9)
 
     # Portal final
     var portal_center = Vector2(3180, 350)
@@ -203,7 +266,12 @@ func _update_ui():
     elif finished:
         hud.get_node("Message").text = "¡HAS ENCONTRADO EL PORTAL!\nMUNDO 1: MUNDO NORMAL DESBLOQUEADO"
     elif message_timer > 0:
-        hud.get_node("Message").text = "¡CUIDADO!\nPerdiste una vida"
+        if not enemy_alive:
+            hud.get_node("Message").text = "¡ENEMIGO DERROTADO!"
+        else:
+            hud.get_node("Message").text = "¡CUIDADO!\nPerdiste una vida"
+    elif enemy_alive:
+        hud.get_node("Message").text = "¡ENEMIGO ADELANTE!  Pulsa J para atacar"
     else:
         hud.get_node("Message").text = "Encuentra el portal al final de la selva"
 
