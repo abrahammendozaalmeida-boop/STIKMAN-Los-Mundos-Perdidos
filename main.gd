@@ -32,6 +32,16 @@ var guardian_hits = 0
 var guardian_max_hits = 3
 var guardian_hit_cooldown = 0.0
 
+# Sistema de historia y dialogos
+var dialogue_active = false
+var dialogue_lines = []
+var dialogue_index = 0
+var dialogue_char_index = 0
+var dialogue_char_timer = 0.0
+var dialogue_char_speed = 0.025
+var dialogue_can_advance = false
+var dialogue_title = ""
+
 var hazard_positions = [
     Vector2(930, 412),
     Vector2(1370, 412),
@@ -52,6 +62,8 @@ var coin_positions = [
 ]
 
 func _ready():
+    _create_dialogue_ui()
+    _start_prologue_dialogue()
     _create_hazards()
     _create_coins()
     _create_exit()
@@ -60,7 +72,8 @@ func _ready():
     update()
 
 func _process(delta):
-    if not game_over and not finished:
+    _update_dialogue(delta)
+    if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
             message_timer -= delta
@@ -79,6 +92,146 @@ func _process(delta):
             _check_enemy_contact()
         _update_ui()
     update()
+
+func _create_dialogue_ui():
+    var layer = CanvasLayer.new()
+    layer.name = "DialogueLayer"
+    add_child(layer)
+
+    var panel = Panel.new()
+    panel.name = "DialoguePanel"
+    panel.rect_position = Vector2(90, 355)
+    panel.rect_size = Vector2(780, 145)
+    panel.visible = false
+    layer.add_child(panel)
+
+    var title = Label.new()
+    title.name = "DialogueTitle"
+    title.rect_position = Vector2(22, 12)
+    title.rect_size = Vector2(730, 28)
+    title.text = "STIKMAN"
+    title.add_color_override("font_color", Color("#55dfff"))
+    title.add_color_override("font_size", 20)
+    panel.add_child(title)
+
+    var text = Label.new()
+    text.name = "DialogueText"
+    text.rect_position = Vector2(22, 45)
+    text.rect_size = Vector2(730, 60)
+    text.autowrap = true
+    text.text = ""
+    text.add_color_override("font_size", 18)
+    panel.add_child(text)
+
+    var continue_button = Button.new()
+    continue_button.name = "DialogueContinue"
+    continue_button.rect_position = Vector2(565, 108)
+    continue_button.rect_size = Vector2(105, 28)
+    continue_button.text = "CONTINUAR"
+    continue_button.connect("pressed", self, "_on_dialogue_continue")
+    panel.add_child(continue_button)
+
+    var skip_button = Button.new()
+    skip_button.name = "DialogueSkip"
+    skip_button.rect_position = Vector2(680, 108)
+    skip_button.rect_size = Vector2(75, 28)
+    skip_button.text = "OMITIR"
+    skip_button.connect("pressed", self, "_on_dialogue_skip")
+    panel.add_child(skip_button)
+
+func _start_dialogue(title, lines):
+    if lines.empty():
+        return
+    dialogue_active = true
+    dialogue_title = title
+    dialogue_lines = lines
+    dialogue_index = 0
+    dialogue_char_index = 0
+    dialogue_char_timer = 0.0
+    dialogue_can_advance = false
+    var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+    if panel != null:
+        panel.visible = true
+        panel.get_node("DialogueTitle").text = dialogue_title
+        panel.get_node("DialogueContinue").text = "LEER..."
+    _show_current_dialogue_line()
+
+func _show_current_dialogue_line():
+    if dialogue_index >= dialogue_lines.size():
+        _finish_dialogue()
+        return
+    dialogue_char_index = 0
+    dialogue_char_timer = 0.0
+    dialogue_can_advance = false
+    var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+    if panel != null:
+        panel.get_node("DialogueText").text = ""
+
+func _update_dialogue(delta):
+    if not dialogue_active:
+        return
+    if dialogue_index >= dialogue_lines.size():
+        _finish_dialogue()
+        return
+    var line = str(dialogue_lines[dialogue_index])
+    if dialogue_char_index < line.length():
+        dialogue_char_timer -= delta
+        if dialogue_char_timer <= 0:
+            dialogue_char_timer = dialogue_char_speed
+            dialogue_char_index += 1
+            var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+            if panel != null:
+                panel.get_node("DialogueText").text = line.substr(0, dialogue_char_index)
+    else:
+        dialogue_can_advance = true
+        var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+        if panel != null:
+            panel.get_node("DialogueContinue").text = "CONTINUAR"
+
+func _on_dialogue_continue():
+    if not dialogue_active:
+        return
+    if not dialogue_can_advance:
+        dialogue_char_index = str(dialogue_lines[dialogue_index]).length()
+        dialogue_can_advance = true
+        var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+        if panel != null:
+            panel.get_node("DialogueText").text = str(dialogue_lines[dialogue_index])
+            panel.get_node("DialogueContinue").text = "CONTINUAR"
+        return
+    dialogue_index += 1
+    _show_current_dialogue_line()
+
+func _on_dialogue_skip():
+    if dialogue_active:
+        _finish_dialogue()
+
+func _finish_dialogue():
+    dialogue_active = false
+    dialogue_lines = []
+    dialogue_index = 0
+    dialogue_char_index = 0
+    var panel = get_node_or_null("DialogueLayer/DialoguePanel")
+    if panel != null:
+        panel.visible = false
+
+func _start_prologue_dialogue():
+    _start_dialogue("STIKMAN", [
+        "No recuerdo como llegue hasta aqui...",
+        "La selva esta demasiado silenciosa. No parece que haya nadie.",
+        "Pero alguien estuvo aqui antes que yo.",
+        "Hay señales, caminos y algo extraño al fondo.",
+        "Si quiero descubrir que paso, tendre que seguir adelante."
+    ])
+
+func _start_world1_dialogue():
+    _start_dialogue("STIKMAN", [
+        "Esto no es la selva...",
+        "Es una ciudad. Todo parece normal... demasiado normal.",
+        "Las maquinas siguen funcionando, pero no veo a una sola persona.",
+        "Hay tres señales de energia repartidas por la ciudad.",
+        "Tal vez descubra que ocurrio si logro volver cada señal a su nodo."
+    ])
 
 func _update_enemy(delta):
     if not enemy_alive:
@@ -485,6 +638,7 @@ func _on_exit_body_entered(body):
     if not world1_mode:
         world1_mode = true
         world1_ready = false
+        _start_world1_dialogue()
         body.position = Vector2(220, 350)
         body.velocity = Vector2.ZERO
         var portal = get_node_or_null("PortalFinal")
