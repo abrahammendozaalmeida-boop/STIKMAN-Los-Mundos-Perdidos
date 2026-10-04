@@ -14,7 +14,8 @@ var health = 3
 var max_health = 3
 var fruit_money = 0
 var play_time_seconds = 0.0
-var seconds_in_day = 0.0
+var seconds_in_day = 150.0
+var checkpoint_position = Vector2(100, 445)
 var checkpoint_id = "shipwreck_start"
 var unlocked_levels = {"world_01": 1}
 var collected_stickers = []
@@ -27,8 +28,9 @@ func start_new_game():
 	health = max_health
 	fruit_money = 0
 	play_time_seconds = 0.0
-	seconds_in_day = 0.0
+	seconds_in_day = 150.0
 	checkpoint_id = "shipwreck_start"
+	checkpoint_position = Vector2(100, 445)
 	unlocked_levels = {"world_01": 1}
 	collected_stickers = []
 	story_flags = {}
@@ -70,6 +72,7 @@ func to_save_data():
 		"play_time_seconds": play_time_seconds,
 		"seconds_in_day": seconds_in_day,
 		"checkpoint_id": checkpoint_id,
+		"checkpoint_position": [checkpoint_position.x, checkpoint_position.y],
 		"unlocked_levels": unlocked_levels,
 		"collected_stickers": collected_stickers,
 		"story_flags": story_flags
@@ -88,6 +91,11 @@ func apply_save_data(data):
 	play_time_seconds = max(0.0, float(data.get("play_time_seconds", 0.0)))
 	seconds_in_day = fposmod(float(data.get("seconds_in_day", 0.0)), DAY_LENGTH_SECONDS)
 	checkpoint_id = str(data.get("checkpoint_id", "shipwreck_start"))
+	var saved_position = data.get("checkpoint_position", [100.0, 445.0])
+	if typeof(saved_position) == TYPE_ARRAY and saved_position.size() >= 2:
+		checkpoint_position = Vector2(float(saved_position[0]), float(saved_position[1]))
+	else:
+		checkpoint_position = Vector2(100, 445)
 	unlocked_levels = data.get("unlocked_levels", {"world_01": 1})
 	collected_stickers = data.get("collected_stickers", [])
 	story_flags = data.get("story_flags", {})
