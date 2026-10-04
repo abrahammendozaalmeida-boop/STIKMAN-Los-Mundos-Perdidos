@@ -232,6 +232,7 @@ func _ready():
     _create_world1_box()
     _create_world1_underground_zone()
     _load_save()
+    _rebuild_level_geometry()
     _create_menu_ui()
     _show_main_menu()
     _update_ui()
@@ -245,8 +246,7 @@ func _process(delta):
         auto_save_timer += delta
         if auto_save_timer >= 20.0:
             auto_save_timer = 0.0
-            _build_level_objects()
-    _save_game()
+            _save_game()
         if checkpoint_message_timer > 0.0:
             checkpoint_message_timer -= delta
     if not game_started:
@@ -415,10 +415,18 @@ func _menu_level_select():
     _clear_menu_buttons()
     menu_title.text = "SELECCIONAR NIVEL"
     menu_info.text = "Desbloqueados: 1 - %d" % level_select_unlocked
-    var shown = min(level_select_unlocked, 8)
+    var shown = min(level_select_unlocked, 20)
     for i in range(shown):
-        _add_menu_button("NIVEL %d • %s" % [i + 1, world1_level_titles[i]], "_select_level_%d" % (i + 1), 115 + i * 38)
-    _add_menu_button("VOLVER", "_menu_back", 430)
+        var col = i % 2
+        var row = int(i / 2)
+        var button = Button.new()
+        button.text = "NIVEL %d • %s" % [i + 1, world1_level_titles[i]]
+        button.rect_position = Vector2(35 + col * 205, 115 + row * 32)
+        button.rect_size = Vector2(195, 29)
+        button.connect("pressed", self, "_select_level_%d" % (i + 1))
+        menu_panel.add_child(button)
+        menu_buttons.append(button)
+    _add_menu_button("VOLVER", "_menu_back", 450)
 
 func _select_level_1(): _select_level(1)
 func _select_level_2(): _select_level(2)
@@ -428,12 +436,27 @@ func _select_level_5(): _select_level(5)
 func _select_level_6(): _select_level(6)
 func _select_level_7(): _select_level(7)
 func _select_level_8(): _select_level(8)
+func _select_level_9(): _select_level(9)
+func _select_level_10(): _select_level(10)
+func _select_level_11(): _select_level(11)
+func _select_level_12(): _select_level(12)
+func _select_level_13(): _select_level(13)
+func _select_level_14(): _select_level(14)
+func _select_level_15(): _select_level(15)
+func _select_level_16(): _select_level(16)
+func _select_level_17(): _select_level(17)
+func _select_level_18(): _select_level(18)
+func _select_level_19(): _select_level(19)
+func _select_level_20(): _select_level(20)
 
 func _select_level(level_number):
     if level_number > level_select_unlocked:
         return
     world1_level = level_number
     world1_mode = true
+    world1_level_completed = false
+    _reset_level_interactive_state()
+    _rebuild_level_geometry()
     checkpoint_level = level_number
     checkpoint_world = 1
     checkpoint_position = Vector2(220, 350)
@@ -842,6 +865,59 @@ func _check_enemy_contact():
             game_over = true
             player.set_physics_process(false)
 
+
+func _check_level_completion():
+    if not game_started or not world1_mode or dialogue_active or game_over or finished:
+        return
+    var player = get_node_or_null("Stikman")
+    if player == null or world1_level_completed:
+        return
+
+    var completed = false
+    if world1_level == 1:
+        completed = world1_items >= 1
+    elif world1_level == 2:
+        completed = world1_terminal_activated[0] or world1_switch_activated
+    elif world1_level == 3:
+        completed = world1_terminal_activated[0] and world1_terminal_activated[1]
+    elif world1_level == 4:
+        completed = world1_box_moved or world1_switch_activated
+    elif world1_level == 5:
+        completed = world1_door_open or world1_switch_activated
+    elif world1_level == 6:
+        completed = world1_key_collected or world1_switch_activated
+    elif world1_level == 7:
+        completed = world1_switch_activated
+    elif world1_level == 8:
+        completed = world1_box_on_switch or world1_switch_activated
+    elif world1_level == 9:
+        completed = world1_platform_unlocked and player.position.x > 2650
+    elif world1_level == 10:
+        completed = world1_mystery_signal_found or world1_switch_activated
+    elif world1_level == 11:
+        completed = world1_mystery_destination_found or world1_switch_activated
+    elif world1_level == 12:
+        completed = world1_underground_mode or world1_switch_activated
+    elif world1_level == 13:
+        completed = world1_underground_lever_activated or world1_switch_activated
+    elif world1_level == 14:
+        completed = world1_underground_generator_activated or world1_switch_activated
+    elif world1_level == 15:
+        completed = world1_switch_activated and player.position.x > 1200
+    elif world1_level == 16:
+        completed = world1_switch_activated and player.position.x > 1200
+    elif world1_level == 17:
+        completed = world1_switch_activated and player.position.x > 1200
+    elif world1_level == 18:
+        completed = player.position.x > 1400
+    elif world1_level == 19:
+        completed = player.position.x > 1600
+    elif world1_level == 20:
+        completed = finished
+
+    if completed:
+        var next_index = min(world1_level, level_start_positions.size() - 1)
+        _complete_world1_level(level_start_positions[next_index])
 
 func _set_checkpoint(position_value):
     checkpoint_position = position_value
@@ -1557,9 +1633,24 @@ func _show_level_intro(level_number):
     var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
     _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
 
+func _rebuild_level_geometry():
+    _clear_level_geometry()
+    _build_interactive_level_objects()
+    _build_parkour_geometry()
+    update()
+
+func _clear_level_geometry():
+    var parkour = get_node_or_null("LevelParkour")
+    if parkour != null:
+        parkour.queue_free()
+    var interactives = get_node_or_null("LevelInteractives")
+    if interactives != null:
+        interactives.queue_free()
+
+func _reset_level_interactive_state():
+    world1_switch_activated = false
+
 func _build_interactive_level_objects():
-    # Objetos interactivos ligeros: se adaptan al nivel y no requieren
-    # recursos externos.
     var parent = Node2D.new()
     parent.name = "LevelInteractives"
     add_child(parent)
@@ -1567,22 +1658,80 @@ func _build_interactive_level_objects():
     var level = world1_level
     if level == 2 or level == 3:
         _create_level_switch(parent, Vector2(900, 330), "INTERRUPTOR", 1)
-        _create_level_barrier(parent, Vector2(1180, 410), "COMPUERTA")
+        _create_level_barrier(parent, Vector2(1180, 410), "COMPUERTA", 1)
     elif level == 4 or level == 5:
         _create_level_mover(parent, Vector2(900, 330), 100)
         _create_level_switch(parent, Vector2(1250, 360), "GRUA", 2)
+        _create_level_barrier(parent, Vector2(1420, 360), "BLOQUEO", 2)
     elif level == 6 or level == 7:
         _create_level_switch(parent, Vector2(1050, 300), "GENERADOR", 3)
-        _create_level_barrier(parent, Vector2(1350, 350), "BARRERA")
+        _create_level_barrier(parent, Vector2(1350, 350), "BARRERA", 3)
     elif level == 8 or level == 9:
         _create_level_mover(parent, Vector2(1050, 260), 140)
         _create_level_switch(parent, Vector2(1450, 320), "PLATAFORMA", 4)
+        _create_level_barrier(parent, Vector2(1600, 320), "PASO", 4)
     elif level >= 10 and level <= 15:
         _create_level_switch(parent, Vector2(1050, 250), "ENERGIA", 5)
-        _create_level_barrier(parent, Vector2(1450, 330), "PUERTA", 6)
+        _create_level_barrier(parent, Vector2(1450, 330), "PUERTA", 5)
     elif level >= 16 and level <= 19:
         _create_level_mover(parent, Vector2(1100, 280), 180)
-        _create_level_barrier(parent, Vector2(1500, 300), "BLOQUEO", 7)
+        _create_level_switch(parent, Vector2(1350, 300), "ALERTA", 6)
+        _create_level_barrier(parent, Vector2(1500, 300), "BLOQUEO", 6)
+
+func _create_level_switch(parent, pos, label_text, id):
+    var area = Area2D.new()
+    area.position = pos
+    area.name = "Switch_%d" % id
+    area.set_meta("switch_id", id)
+    var shape = CollisionShape2D.new()
+    var circle = CircleShape2D.new()
+    circle.radius = 28
+    shape.shape = circle
+    area.add_child(shape)
+    parent.add_child(area)
+    area.connect("body_entered", self, "_on_level_switch_body_entered", [id, label_text])
+
+func _create_level_barrier(parent, pos, label_text, id):
+    var body = StaticBody2D.new()
+    body.position = pos
+    body.name = "Barrier_%d_%s" % [id, label_text]
+    body.set_meta("barrier_id", id)
+    var shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(14, 65)
+    shape.shape = rect
+    body.add_child(shape)
+    parent.add_child(body)
+
+func _create_level_mover(parent, pos, distance):
+    var body = KinematicBody2D.new()
+    body.position = pos
+    body.name = "MovingObstacle"
+    body.set_meta("start_x", pos.x)
+    body.set_meta("distance", distance)
+    body.set_meta("phase", 0.0)
+    var shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(55, 12)
+    shape.shape = rect
+    body.add_child(shape)
+    parent.add_child(body)
+
+func _on_level_switch_body_entered(body, id, label_text):
+    if body != get_node_or_null("Stikman") or dialogue_active:
+        return
+    world1_switch_activated = true
+    var parent = get_node_or_null("LevelInteractives")
+    if parent != null:
+        for child in parent.get_children():
+            if child.has_meta("barrier_id") and int(child.get_meta("barrier_id")) == int(id):
+                var shape = child.get_child(0)
+                if shape is CollisionShape2D:
+                    shape.disabled = true
+    get_node("HUD/Message").text = "%s ACTIVADO • CAMINO ABIERTO" % label_text
+    message_timer = 1.5
+    _save_game()
+    update()
 
 func _create_level_switch(parent, pos, label_text, id):
     var area = Area2D.new()
@@ -1638,6 +1787,9 @@ func _build_level_objects():
         get_node("HUD/Message").text = "%s  •  %s  •  %s" % [items[0], items[1], items[2]]
 
 func _build_parkour_geometry():
+    var parent = Node2D.new()
+    parent.name = "LevelParkour"
+    add_child(parent)
     var layout = level_layouts[clamp(world1_level - 1, 0, level_layouts.size() - 1)]
     for item in layout:
         var body = StaticBody2D.new()
@@ -1648,7 +1800,7 @@ func _build_parkour_geometry():
         rect.extents = Vector2(item[2] / 2.0, item[3] / 2.0)
         shape.shape = rect
         body.add_child(shape)
-        add_child(body)
+        parent.add_child(body)
 
 func _draw_parkour_visuals():
     var layout = level_layouts[clamp(world1_level - 1, 0, level_layouts.size() - 1)]
@@ -1675,6 +1827,9 @@ func _start_world1_level(level_number):
     world1_level = clamp(level_number, 1, world1_level_count)
     world1_mode = true
     world1_ready = false
+    world1_level_completed = false
+    _reset_level_interactive_state()
+    _rebuild_level_geometry()
     world1_items = 0
     world1_signal_collected = [false, false, false]
     world1_terminal_activated = [false, false, false]
