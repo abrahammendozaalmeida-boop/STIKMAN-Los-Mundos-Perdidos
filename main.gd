@@ -10,6 +10,9 @@ var world1_mode = false
 var world1_portal_x = 3300.0
 var world1_items = 0
 var world1_item_positions = [Vector2(720, 350), Vector2(1720, 350), Vector2(2700, 350)]
+var world1_signal_collected = [false, false, false]
+var world1_terminal_positions = [Vector2(450, 350), Vector2(1450, 350), Vector2(2450, 350)]
+var world1_terminal_activated = [false, false, false]
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -114,6 +117,44 @@ func _check_enemy_contact():
         if health <= 0:
             game_over = true
             player.set_physics_process(false)
+
+func _check_world1_progress():
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+
+    var changed = false
+
+    # Las señales se pueden recoger y después hay que regresar
+    # al nodo correspondiente para activarlas.
+    for i in range(world1_item_positions.size()):
+        if not world1_signal_collected[i] and player.position.distance_to(world1_item_positions[i]) < 55:
+            world1_signal_collected[i] = true
+            world1_items += 1
+            message_timer = 1.2
+            changed = true
+
+    for i in range(world1_terminal_positions.size()):
+        if world1_signal_collected[i] and not world1_terminal_activated[i]:
+            if player.position.distance_to(world1_terminal_positions[i]) < 70:
+                world1_terminal_activated[i] = true
+                message_timer = 1.2
+                changed = true
+
+    var all_activated = true
+    for activated in world1_terminal_activated:
+        if not activated:
+            all_activated = false
+            break
+
+    if all_activated and not world1_ready:
+        world1_ready = true
+        message_timer = 3.0
+        changed = true
+
+    if changed:
+        _update_ui()
+        update()
 
 func _draw():
     if world1_mode:
@@ -232,17 +273,45 @@ func _draw_world1():
         draw_circle(Vector2(x + 22, 433), 12, Color("#202328"))
         draw_circle(Vector2(x + 78, 433), 12, Color("#202328"))
 
-    var p = Vector2(world1_portal_x, 350)
-    draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.16))
-    draw_arc(p, 58, 0, PI * 2, 48, Color("#56e0ff"), 8)
-    draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
-    draw_circle(p, 8, Color("#ffffff"))
+    # Nodos de energía: cada señal tiene un lugar específico al que hay
+    # que regresar para activarla.
+    for i in range(world1_terminal_positions.size()):
+        var terminal = world1_terminal_positions[i]
+        if world1_terminal_activated[i]:
+            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#1e9f8a"))
+            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#7dffe8"))
+            draw_circle(terminal, 10, Color("#ffffff"))
+            draw_string(ThemeDB.fallback_font, terminal + Vector2(-52, 98), "NODO ACTIVADO", Color("#baffef"))
+        elif world1_signal_collected[i]:
+            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#d4a72c"))
+            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#ffe57d"))
+            draw_circle(terminal, 10, Color("#ffffff"))
+            draw_string(ThemeDB.fallback_font, terminal + Vector2(-55, 98), "REGRESA AQUI", Color("#fff1a8"))
+        else:
+            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#50555a"))
+            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#737a80"))
+            draw_circle(terminal, 10, Color("#b8c0c5"))
+            draw_string(ThemeDB.fallback_font, terminal + Vector2(-42, 98), "ESPERANDO", Color("#d9d9d9"))
 
-    for item in world1_item_positions:
-        draw_circle(item, 18, Color("#ffd85a"))
-        draw_circle(item, 9, Color("#fff4b0"))
-        draw_line(item + Vector2(-8, 0), item + Vector2(8, 0), Color("#ffffff"), 3)
-        draw_line(item + Vector2(0, -8), item + Vector2(0, 8), Color("#ffffff"), 3)
+    for i in range(world1_item_positions.size()):
+        if not world1_signal_collected[i]:
+            var item = world1_item_positions[i]
+            draw_circle(item, 18, Color("#ffd85a"))
+            draw_circle(item, 9, Color("#fff4b0"))
+            draw_line(item + Vector2(-8, 0), item + Vector2(8, 0), Color("#ffffff"), 3)
+            draw_line(item + Vector2(0, -8), item + Vector2(0, 8), Color("#ffffff"), 3)
+
+    var p = Vector2(world1_portal_x, 350)
+    if world1_ready:
+        draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.16))
+        draw_arc(p, 58, 0, PI * 2, 48, Color("#56e0ff"), 8)
+        draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
+        draw_circle(p, 8, Color("#ffffff"))
+    else:
+        draw_circle(p, 72, Color(0.35, 0.12, 0.12, 0.18))
+        draw_arc(p, 58, 0, PI * 2, 48, Color("#8b3d3d"), 8)
+        draw_line(p + Vector2(-38, -38), p + Vector2(38, 38), Color("#ff5a5a"), 8)
+        draw_line(p + Vector2(38, -38), p + Vector2(-38, 38), Color("#ff5a5a"), 8)
 
 func _create_hazards():
     for i in range(hazard_positions.size()):
@@ -310,13 +379,6 @@ func _on_collectible_body_entered(body, area):
         return
 
     if world1_mode:
-        for i in range(world1_item_positions.size()):
-            if body.position.distance_to(world1_item_positions[i]) < 55:
-                world1_item_positions.remove(i)
-                world1_items += 1
-                message_timer = 0.8
-                _update_ui()
-                break
         return
 
     if not is_instance_valid(area):
@@ -343,7 +405,7 @@ func _on_exit_body_entered(body):
         _update_ui()
         return
 
-    if world1_mode and world1_items < 3:
+    if world1_mode and not world1_ready:
         message_timer = 2.0
         _update_ui()
         return
@@ -372,7 +434,11 @@ func _update_ui():
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
     hud.get_node("World").text = "MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA"
     if world1_mode:
-        hud.get_node("Stats").text = "VIDA: %d/3     SEÑALES: %d/3" % [health, world1_items]
+        var activated_count = 0
+        for activated in world1_terminal_activated:
+            if activated:
+                activated_count += 1
+        hud.get_node("Stats").text = "VIDA: %d/3     SEÑALES: %d/3     NODOS: %d/3" % [health, world1_items, activated_count]
     else:
         hud.get_node("Stats").text = "VIDA: %d/3     CRISTALES: %d/%d" % [health, coins, coin_positions.size()]
     hud.get_node("Timer").text = "TIEMPO: %02d:%02d" % [int(elapsed) / 60, int(elapsed) % 60]
@@ -384,12 +450,21 @@ func _update_ui():
     elif victory_timer > 0:
         hud.get_node("Message").text = "¡GUARDIAN DERROTADO!\nEL PORTAL SE ESTA ABRIENDO..."
     elif message_timer > 0:
-        if not enemy_alive and not world1_ready:
+        if world1_mode:
+            hud.get_node("Message").text = "MUNDO 1: REGRESA A LOS NODOS PARA ACTIVAR LAS SEÑALES"
+        elif not enemy_alive and not world1_ready:
             hud.get_node("Message").text = "¡GUARDIAN DERROTADO!\nACERCATE AL PORTAL"
         elif enemy_alive:
             hud.get_node("Message").text = "PORTAL BLOQUEADO\n¡DERROTA AL GUARDIAN PRIMERO!"
         else:
             hud.get_node("Message").text = "¡GUARDIAN DERROTADO!"
+    elif world1_mode:
+        if world1_ready:
+            hud.get_node("Message").text = "¡3 NODOS ACTIVADOS!\nVE AL PORTAL AZUL"
+        elif world1_items < 3:
+            hud.get_node("Message").text = "BUSCA LAS SEÑALES Y REGRESA A SU NODO"
+        else:
+            hud.get_node("Message").text = "¡TODAS LAS SEÑALES CONSEGUIDAS!\nREGRESA A CADA NODO"
     elif enemy_alive:
         hud.get_node("Message").text = "¡GUARDIAN ADELANTE!  J para atacar  |  ENERGIA: %d/%d" % [guardian_max_hits - guardian_hits, guardian_max_hits]
     else:
