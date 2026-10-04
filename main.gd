@@ -31,6 +31,7 @@ var world1_platform_body = null
 var world1_platform_shape = null
 var world1_rooftop_discovered = false
 var world1_rooftop_message_shown = false
+var world1_mystery_signal_found = false
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -366,6 +367,7 @@ func _check_world1_rooftop():
     # La plataforma lleva a una zona elevada con una señal misteriosa.
     if player.position.x > 2380 and player.position.x < 2750 and player.position.y < 285:
         world1_rooftop_discovered = true
+        world1_mystery_signal_found = true
         message_timer = 3.0
         _start_dialogue("STIKMAN", [
             "¿Que es eso?",
@@ -610,7 +612,7 @@ func _draw_world1():
         draw_rect(Rect2(2380, 245, 330, 5), Color("#56e0ff"))
         draw_circle(Vector2(2635, 220), 18, Color("#b9f8ff"))
         draw_circle(Vector2(2635, 220), 9, Color("#ffffff"))
-        draw_string(ThemeDB.fallback_font, Vector2(2420, 230), "SEÑAL DESCONOCIDA", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#d8fbff"))
+        draw_string(Control.new().get_theme_default_font(), Vector2(2420, 230), "SEÑAL DESCONOCIDA", Color("#d8fbff"))
 
     # Interruptor final.
     draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
@@ -813,7 +815,10 @@ func _update_ui():
         elif world1_key_collected and not world1_door_open:
             hud.get_node("Message").text = "LLAVE CONSEGUIDA\nREGRESA A LA PUERTA"
         elif world1_door_open and not world1_switch_activated:
-            hud.get_node("Message").text = "PUERTA ABIERTA\nACTIVA EL INTERRUPTOR"
+            if world1_mystery_signal_found:
+                hud.get_node("Message").text = "HAY UNA SEÑAL EXTRAÑA...\nSIGUE LA PISTA"
+            else:
+                hud.get_node("Message").text = "PUERTA ABIERTA\nACTIVA EL INTERRUPTOR"
         elif world1_switch_activated:
             hud.get_node("Message").text = "¡CAMINO DESBLOQUEADO!\nVE AL PORTAL AZUL"
         elif world1_items < 3:
