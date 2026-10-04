@@ -1353,6 +1353,30 @@ func _draw():
         var glow = 0.25 + 0.15 * sin(elapsed * 2.0 + float(i))
         draw_circle(Vector2(px, py), 3.0, Color(0.76, 0.92, 0.55, glow))
 
+    # Respuesta ambiental al movimiento de Stikman: vegetacion y polvo reaccionan
+    # sin fisica pesada ni shaders, manteniendo el juego ligero.
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        var player_x = player.position.x
+        for x in range(110, 3600, 280):
+            var fx = float(x) + sin(float(x) * 0.04) * 18.0
+            var distance = abs(player_x - fx)
+            if distance < 170.0:
+                var sway = (1.0 - distance / 170.0) * sin(elapsed * 7.0 + float(x) * 0.03) * 16.0
+                draw_line(Vector2(fx, 430), Vector2(fx - 22 + sway, 397), Color("#477b3d"), 7)
+                draw_line(Vector2(fx, 430), Vector2(fx + 25 + sway, 391), Color("#4f8a43"), 7)
+
+        # Aterrizaje: una pequena nube de polvo y una onda visual.
+        if player.has_method("get") and player.get("land_timer") != null:
+            var land_timer = float(player.get("land_timer"))
+            if land_timer > 0.0:
+                var impact = 1.0 - clamp(land_timer / 0.16, 0.0, 1.0)
+                var radius = 18.0 + impact * 32.0
+                var alpha = 0.22 * (1.0 - impact)
+                draw_arc(Vector2(player_x, 430), radius, PI, PI * 2.0, 18, Color(0.78, 0.70, 0.58, alpha), 2)
+                draw_circle(Vector2(player_x - 20 - impact * 10, 426), 3.0 + impact * 3.0, Color(0.72, 0.64, 0.52, alpha))
+                draw_circle(Vector2(player_x + 22 + impact * 10, 426), 3.0 + impact * 3.0, Color(0.72, 0.64, 0.52, alpha))
+
     # Peligros
     for p in hazard_positions:
         draw_colored_polygon(PoolVector2Array([
