@@ -111,7 +111,6 @@ func _create_dialogue_ui():
     title.rect_size = Vector2(730, 28)
     title.text = "STIKMAN"
     title.add_color_override("font_color", Color("#55dfff"))
-    title.add_color_override("font_size", 20)
     panel.add_child(title)
 
     var text = Label.new()
@@ -120,7 +119,6 @@ func _create_dialogue_ui():
     text.rect_size = Vector2(730, 60)
     text.autowrap = true
     text.text = ""
-    text.add_color_override("font_size", 18)
     panel.add_child(text)
 
     var continue_button = Button.new()
