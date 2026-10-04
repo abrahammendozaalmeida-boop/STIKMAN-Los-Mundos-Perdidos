@@ -32,6 +32,8 @@ var world1_platform_shape = null
 var world1_rooftop_discovered = false
 var world1_rooftop_message_shown = false
 var world1_mystery_signal_found = false
+var world1_mystery_clue_collected = false
+var world1_mystery_clue_position = Vector2(2635, 220)
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -90,6 +92,7 @@ func _process(delta):
     if world1_mode and not dialogue_active:
         _update_world1_environment(delta)
         _check_world1_rooftop()
+        _check_world1_mystery_clue()
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -360,6 +363,22 @@ func _check_world1_interactions():
         _update_ui()
         update()
 
+func _check_world1_mystery_clue():
+    var player = get_node_or_null("Stikman")
+    if player == null or not world1_mystery_signal_found or world1_mystery_clue_collected:
+        return
+    if player.position.distance_to(world1_mystery_clue_position) < 65:
+        world1_mystery_clue_collected = true
+        message_timer = 3.0
+        _start_dialogue("STIKMAN", [
+            "Hay una marca oculta en la señal.",
+            "No parece una falla... alguien la dejo aqui.",
+            "La energia fue desviada hacia otra parte de la ciudad.",
+            "Entonces la cuarta señal no es un accidente.",
+            "Tengo que encontrar hacia donde fue enviada."
+        ])
+        update()
+
 func _check_world1_rooftop():
     var player = get_node_or_null("Stikman")
     if player == null or world1_rooftop_discovered:
@@ -612,6 +631,8 @@ func _draw_world1():
         draw_rect(Rect2(2380, 245, 330, 5), Color("#56e0ff"))
         draw_circle(Vector2(2635, 220), 18, Color("#b9f8ff"))
         draw_circle(Vector2(2635, 220), 9, Color("#ffffff"))
+        if not world1_mystery_clue_collected:
+            draw_arc(Vector2(2635, 220), 28 + sin(elapsed * 4) * 4, 0, PI * 2, 24, Color("#d8fbff"), 2)
         draw_string(Control.new().get_theme_default_font(), Vector2(2420, 230), "SEÑAL DESCONOCIDA", Color("#d8fbff"))
 
     # Interruptor final.
@@ -815,8 +836,10 @@ func _update_ui():
         elif world1_key_collected and not world1_door_open:
             hud.get_node("Message").text = "LLAVE CONSEGUIDA\nREGRESA A LA PUERTA"
         elif world1_door_open and not world1_switch_activated:
-            if world1_mystery_signal_found:
-                hud.get_node("Message").text = "HAY UNA SEÑAL EXTRAÑA...\nSIGUE LA PISTA"
+            if world1_mystery_signal_found and not world1_mystery_clue_collected:
+                hud.get_node("Message").text = "ENCUENTRA LA SEÑAL EXTRAÑA\nSUBE CON LA PLATAFORMA"
+            elif world1_mystery_clue_collected:
+                hud.get_node("Message").text = "LA ENERGIA FUE DESVIADA\nSIGUE LA PISTA"
             else:
                 hud.get_node("Message").text = "PUERTA ABIERTA\nACTIVA EL INTERRUPTOR"
         elif world1_switch_activated:
