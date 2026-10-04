@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://scripts/levels/level_controller.gd" type="Script" id=1]
 [ext_resource path="res://scenes/player/stikman.tscn" type="PackedScene" id=2]
+[ext_resource path="res://scenes/objects/checkpoint.tscn" type="PackedScene" id=3]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2(1700, 40)
@@ -80,8 +81,11 @@ mouse_filter = 2
 [node name="Collision" type="CollisionShape2D" parent="Platform03"]
 shape = SubResource(4)
 
+[node name="Checkpoint01" parent="." instance=ExtResource(3)]
+position = Vector2(850, 430)
+
 [node name="Stikman" parent="." instance=ExtResource(2)]
-position = Vector2(100, 450)
+position = Vector2(100, 445)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
