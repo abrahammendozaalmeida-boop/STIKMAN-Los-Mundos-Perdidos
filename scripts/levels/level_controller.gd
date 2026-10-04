@@ -18,6 +18,7 @@ func _ready():
 	health_label = get_node(health_label_path)
 	money_label = get_node(money_label_path)
 	day_seconds = GameState.seconds_in_day
+	player.position = GameState.checkpoint_position
 	_update_hud()
 	GameState.connect("health_changed", self, "_on_health_changed")
 	GameState.connect("money_changed", self, "_on_money_changed")
@@ -89,5 +90,6 @@ func _restart_level():
 
 func _return_to_menu():
 	get_tree().paused = false
+	GameState.checkpoint_position = player.position
 	SaveManager.save_game()
 	SceneRouter.change_to("res://scenes/menus/main_menu.tscn")
