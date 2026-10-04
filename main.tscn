@@ -64,8 +64,6 @@ margin_top = 10.0
 margin_right = 650.0
 margin_bottom = 34.0
 text = "STIKMAN - LOS MUNDOS PERDIDOS"
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 20
 
 [node name="World" type="Label" parent="HUD"]
 margin_left = 22.0
@@ -73,8 +71,6 @@ margin_top = 39.0
 margin_right = 400.0
 margin_bottom = 64.0
 text = "PROLOGO: LA SELVA"
-theme_override_colors/font_color = Color(0.62, 0.91, 0.44, 1)
-theme_override_font_sizes/font_size = 18
 
 [node name="Stats" type="Label" parent="HUD"]
 margin_left = 650.0
@@ -83,7 +79,6 @@ margin_right = 940.0
 margin_bottom = 38.0
 text = "VIDA: 3/3     CRISTALES: 0/9"
 align = 2
-theme_override_font_sizes/font_size = 16
 
 [node name="Timer" type="Label" parent="HUD"]
 margin_left = 650.0
@@ -92,7 +87,6 @@ margin_right = 940.0
 margin_bottom = 64.0
 text = "TIEMPO: 00:00"
 align = 2
-theme_override_font_sizes/font_size = 16
 
 [node name="Message" type="Label" parent="HUD"]
 margin_left = 190.0
@@ -101,8 +95,6 @@ margin_right = 770.0
 margin_bottom = 160.0
 text = "Encuentra el portal al final de la selva"
 align = 1
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 20
 
 [node name="Controls" type="Label" parent="HUD"]
 margin_left = 20.0
@@ -110,7 +102,6 @@ margin_top = 500.0
 margin_right = 650.0
 margin_bottom = 530.0
 text = "A/D o FLECHAS: mover    SHIFT: correr    ESPACIO: saltar"
-theme_override_font_sizes/font_size = 15
 
 [node name="Goal" type="Label" parent="HUD"]
 margin_left = 700.0
@@ -119,4 +110,3 @@ margin_right = 940.0
 margin_bottom = 530.0
 text = "OBJETIVO: encontrar el portal"
 align = 2
-theme_override_font_sizes/font_size = 15
