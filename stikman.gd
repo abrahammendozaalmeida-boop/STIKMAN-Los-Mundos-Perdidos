@@ -9,6 +9,7 @@ var anim_time = 0.0
 var facing = 1
 var attacking = false
 var attack_timer = 0.0
+var outfit_id = 0
 
 func _ready():
     update()
@@ -73,11 +74,22 @@ func _draw():
 
     # Cabeza
     draw_circle(Vector2(0, -105), 24, Color("#edd0ae"))
+    if outfit_id == 3:
+        draw_arc(Vector2(0, -109), 25, PI, PI * 2, 20, Color("#c58b45"), 7)
     draw_circle(Vector2(-8, -111), 3, Color("#111111"))
     draw_circle(Vector2(8, -111), 3, Color("#111111"))
 
-    # Cuerpo
-    draw_line(Vector2(0, -81), Vector2(0, -25), Color("#111111"), 9)
+    # Cuerpo / ropa seleccionada
+    var shirt_color = Color("#111111")
+    if outfit_id == 1:
+        shirt_color = Color("#2f7de1")
+    elif outfit_id == 2:
+        shirt_color = Color("#d94b45")
+    elif outfit_id == 3:
+        shirt_color = Color("#4b9b63")
+    draw_line(Vector2(0, -81), Vector2(0, -25), shirt_color, 11)
+    if outfit_id == 3:
+        draw_line(Vector2(-15, -78), Vector2(15, -78), Color("#d9b45b"), 5)
 
     # Brazos
     if attacking:
