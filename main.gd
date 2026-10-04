@@ -1358,16 +1358,19 @@ func _draw():
     var player = get_node_or_null("Stikman")
     if player != null:
         var player_x = player.position.x
-        for x in range(110, 3600, 280):
-            var fx = float(x) + sin(float(x) * 0.04) * 18.0
-            var distance = abs(player_x - fx)
-            if distance < 170.0:
-                var sway = (1.0 - distance / 170.0) * sin(elapsed * 7.0 + float(x) * 0.03) * 16.0
-                draw_line(Vector2(fx, 430), Vector2(fx - 22 + sway, 397), Color("#477b3d"), 7)
-                draw_line(Vector2(fx, 430), Vector2(fx + 25 + sway, 391), Color("#4f8a43"), 7)
+        # La vegetacion solo reacciona cuando Stikman esta realmente apoyado
+        # en el suelo. En el aire no debe parecer que hay una colision invisible.
+        if player.is_on_floor():
+            for x in range(110, 3600, 280):
+                var fx = float(x) + sin(float(x) * 0.04) * 18.0
+                var distance = abs(player_x - fx)
+                if distance < 170.0:
+                    var sway = (1.0 - distance / 170.0) * sin(elapsed * 7.0 + float(x) * 0.03) * 16.0
+                    draw_line(Vector2(fx, 430), Vector2(fx - 22 + sway, 397), Color("#477b3d"), 7)
+                    draw_line(Vector2(fx, 430), Vector2(fx + 25 + sway, 391), Color("#4f8a43"), 7)
 
-        # Aterrizaje: una pequena nube de polvo y una onda visual.
-        if player.has_method("get") and player.get("land_timer") != null:
+        # El polvo de aterrizaje solo existe durante el contacto real con el piso.
+        if player.is_on_floor() and player.has_method("get") and player.get("land_timer") != null:
             var land_timer = float(player.get("land_timer"))
             if land_timer > 0.0:
                 var impact = 1.0 - clamp(land_timer / 0.16, 0.0, 1.0)
