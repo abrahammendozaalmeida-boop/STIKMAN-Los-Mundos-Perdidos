@@ -19,6 +19,11 @@ var world1_switch_activated = false
 var world1_key_position = Vector2(2050, 350)
 var world1_door_x = 2350.0
 var world1_switch_position = Vector2(2900, 350)
+var world1_box_position = Vector2(1800, 390)
+var world1_box_moved = false
+var world1_platform_x = 2550.0
+var world1_platform_direction = 1.0
+var world1_platform_speed = 70.0
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -73,6 +78,8 @@ func _ready():
 
 func _process(delta):
     _update_dialogue(delta)
+    if world1_mode and not dialogue_active:
+        _update_world1_environment(delta)
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -343,6 +350,37 @@ func _check_world1_interactions():
         _update_ui()
         update()
 
+func _update_world1_environment(delta):
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+
+    # Caja empujable: al tocarla lateralmente, avanza poco a poco.
+    if not world1_box_moved:
+        if abs(player.position.x - world1_box_position.x) < 48 and abs(player.position.y - 350) < 90:
+            if player.position.x < world1_box_position.x:
+                world1_box_position.x += 65 * delta
+            else:
+                world1_box_position.x -= 65 * delta
+            world1_box_moved = true
+            if not dialogue_active:
+                _start_dialogue("STIKMAN", [
+                    "Esta caja se puede mover...",
+                    "¿Por que alguien dejaria esto justo aqui?",
+                    "Tal vez este bloqueando algo."
+                ])
+            update()
+
+    # Plataforma movil: va y vuelve entre dos puntos.
+    world1_platform_x += world1_platform_direction * world1_platform_speed * delta
+    if world1_platform_x >= 2650:
+        world1_platform_x = 2650
+        world1_platform_direction = -1
+    elif world1_platform_x <= 2450:
+        world1_platform_x = 2450
+        world1_platform_direction = 1
+    update()
+
 func _draw():
     if world1_mode:
         _draw_world1()
@@ -507,6 +545,15 @@ func _draw_world1():
             draw_circle(Vector2(x, 382), 5, Color("#b9f8ff"))
     else:
         draw_rect(Rect2(2760, 365, 300, 34), Color("#30343a"))
+
+    # Objetos interactivos del escenario.
+    draw_rect(Rect2(world1_box_position.x - 38, 352, 76, 48), Color("#9b6a3d"))
+    draw_rect(Rect2(world1_box_position.x - 30, 360, 60, 32), Color("#c18a50"))
+    draw_line(world1_box_position + Vector2(-25, -18), world1_box_position + Vector2(25, 18), Color("#6b4528"), 4)
+    draw_line(world1_box_position + Vector2(25, -18), world1_box_position + Vector2(-25, 18), Color("#6b4528"), 4)
+
+    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 18), Color("#59636b"))
+    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 5), Color("#62d9ff"))
 
     # Interruptor final.
     draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
