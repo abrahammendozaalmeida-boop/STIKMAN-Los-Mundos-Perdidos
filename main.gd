@@ -19,6 +19,8 @@ var world1_switch_activated = false
 var world1_key_position = Vector2(2050, 350)
 var world1_door_x = 2350.0
 var world1_switch_position = Vector2(2900, 350)
+var world1_door_body = null
+var world1_door_shape = null
 var elapsed = 0.0
 var message_timer = 0.0
 var enemy_alive = true
@@ -53,6 +55,7 @@ func _ready():
     _create_hazards()
     _create_coins()
     _create_exit()
+    _create_world1_door()
     _update_ui()
     update()
 
@@ -169,12 +172,16 @@ func _check_world1_interactions():
 
     if world1_ready and not world1_key_collected and player.position.distance_to(world1_key_position) < 55:
         world1_key_collected = true
+        if world1_door_shape != null:
+            world1_door_shape.disabled = false
         message_timer = 1.5
         _update_ui()
         update()
 
     if world1_key_collected and not world1_door_open and player.position.distance_to(Vector2(world1_door_x, 350)) < 90:
         world1_door_open = true
+        if world1_door_shape != null:
+            world1_door_shape.disabled = true
         message_timer = 1.5
         _update_ui()
         update()
@@ -341,12 +348,21 @@ func _draw_world1():
     else:
         draw_rect(Rect2(world1_door_x - 6, 250, 12, 180), Color(0.25, 0.8, 0.65, 0.35))
 
+    # Camino secreto: aparece al activar el interruptor.
+    if world1_switch_activated:
+        draw_rect(Rect2(2760, 365, 300, 34), Color("#244e5b"))
+        draw_rect(Rect2(2760, 365, 300, 6), Color("#56e0ff"))
+        for x in range(2790, 3060, 45):
+            draw_circle(Vector2(x, 382), 5, Color("#b9f8ff"))
+    else:
+        draw_rect(Rect2(2760, 365, 300, 34), Color("#30343a"))
+
     # Interruptor final.
     draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
     draw_circle(world1_switch_position + Vector2(0, -5), 13, Color("#56e0ff") if world1_switch_activated else Color("#ffbd45"))
 
     var p = Vector2(world1_portal_x, 350)
-    if world1_ready:
+    if world1_switch_activated:
         draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.16))
         draw_arc(p, 58, 0, PI * 2, 48, Color("#56e0ff"), 8)
         draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
@@ -388,6 +404,18 @@ func _create_coins():
         add_child(area)
 
         area.connect("body_entered", self, "_on_collectible_body_entered", [area])
+
+func _create_world1_door():
+    world1_door_body = StaticBody2D.new()
+    world1_door_body.name = "PuertaCiudad"
+    world1_door_body.position = Vector2(world1_door_x, 340)
+    world1_door_shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(18, 90)
+    world1_door_shape.shape = rect
+    world1_door_body.add_child(world1_door_shape)
+    add_child(world1_door_body)
+    world1_door_shape.disabled = true
 
 func _create_exit():
     var area = Area2D.new()
@@ -449,7 +477,7 @@ func _on_exit_body_entered(body):
         _update_ui()
         return
 
-    if world1_mode and not world1_ready:
+    if world1_mode and not world1_switch_activated:
         message_timer = 2.0
         _update_ui()
         return
