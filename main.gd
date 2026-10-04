@@ -94,6 +94,17 @@ var level_select_unlocked = 1
 var checkpoint_message_timer = 0.0
 var auto_save_timer = 0.0
 var level_start_positions = [Vector2(220,350),Vector2(520,350),Vector2(850,350),Vector2(1180,350),Vector2(1500,350),Vector2(1800,350),Vector2(2100,350),Vector2(2400,350),Vector2(2700,350),Vector2(3000,350),Vector2(3150,350),Vector2(3800,350),Vector2(4050,350),Vector2(4250,350),Vector2(220,350),Vector2(850,350),Vector2(1500,350),Vector2(2100,350),Vector2(2750,350),Vector2(3300,350)]
+var world1_parkour_segments = [
+    [0, 520, 620, 455, 260, 70, "SALTO"],
+    [620, 455, 980, 390, 300, 65, "SUBIDA"],
+    [980, 390, 1380, 470, 330, 60, "BAJADA"],
+    [1380, 470, 1780, 350, 330, 55, "ESCALADA"],
+    [1780, 350, 2200, 430, 300, 65, "PUENTE"],
+    [2200, 430, 2600, 300, 320, 55, "AZOTEAS"],
+    [2600, 300, 3050, 440, 280, 70, "DESCENSO"],
+    [3050, 440, 3500, 360, 350, 60, "CARRERA"]
+]
+
 var level_objectives = [
     "Encuentra la primera señal de energia.",
     "Lleva la señal hasta su nodo.",
@@ -1497,6 +1508,22 @@ func _on_exit_body_entered(body):
 func _show_level_intro(level_number):
     var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
     _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
+
+func _apply_level_terrain():
+    # Cada tramo cambia la altura para evitar un recorrido plano.
+    # Los elementos visuales/colisiones existentes se mantienen; aqui se
+    # preparan zonas de subida, bajada y salto para la campaña.
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+    if world1_level <= 1:
+        player.position.y = min(player.position.y, 430)
+    elif world1_level <= 5:
+        player.position.y = min(player.position.y, 390)
+    elif world1_level <= 10:
+        player.position.y = min(player.position.y, 340)
+    else:
+        player.position.y = min(player.position.y, 300)
 
 func _start_world1_level(level_number):
     world1_level = clamp(level_number, 1, world1_level_count)
