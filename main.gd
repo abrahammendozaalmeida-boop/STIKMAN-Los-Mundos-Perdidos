@@ -513,7 +513,7 @@ func _map_enter_jungle():
     _start_game()
 
 func _map_enter_city():
-    var city_unlocked = checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
+    var city_unlocked = world1_unlocked or checkpoint_world == 1 or world1_mode or world1_ready or level_select_unlocked > 1
     if not city_unlocked:
         menu_info.text = "Primero llega al portal de la selva para desbloquear la ciudad."
         return
