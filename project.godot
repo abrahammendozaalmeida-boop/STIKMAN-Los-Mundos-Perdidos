@@ -1,0 +1,32 @@
+[application]
+
+config/name="STIKMAN - LOS MUNDOS PERDIDOS"
+run/main_scene="res://main.tscn"
+
+[display]
+
+window/size/width=960
+window/size/height=540
+window/stretch/mode="2d"
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.04, 0.07, 0.05, 1)
+quality/driver/driver_name="GLES2"
+
+[input]
+
+move_left={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":65), Object(InputEventKey,"scancode":16777231)]
+}
+
+move_right={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":68), Object(InputEventKey,"scancode":16777233)]
+}
+
+jump={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"scancode":32)]
+}
