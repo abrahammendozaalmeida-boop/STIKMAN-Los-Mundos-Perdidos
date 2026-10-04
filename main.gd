@@ -202,6 +202,7 @@ var outfit_id = 0
 var owned_outfits = [true, false, false, false]
 var outfit_names = ["Clasico", "Azul", "Rojo", "Explorador"]
 var outfit_costs = [0, 25, 50, 75]
+var draw_font = null
 
 var hazard_positions = [
     Vector2(930, 412),
@@ -224,6 +225,9 @@ var coin_positions = [
 
 func _ready():
     _create_dialogue_ui()
+    var title_label = get_node_or_null("HUD/Title")
+    if title_label != null:
+        draw_font = title_label.get_font("font")
     _create_hazards()
     _create_coins()
     _create_exit()
@@ -1506,14 +1510,14 @@ func _draw_world1_level_story():
     if level == 1:
         draw_rect(Rect2(80, 330, 170, 78), Color("#3d474b"))
         draw_rect(Rect2(98, 345, 134, 44), Color("#20272a"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(105, 370), "SECTOR 01", Color("#aab8bc"))
+        draw_string(draw_font, Vector2(105, 370), "SECTOR 01", Color("#aab8bc"))
         draw_line(Vector2(250, 365), Vector2(450, 350), Color("#59676b"), 5)
 
     elif level == 2:
         draw_line(Vector2(430, 350), Vector2(720, 350), Color("#6ad7df"), 4)
         draw_line(Vector2(720, 350), Vector2(900, 330), Color("#6ad7df"), 4)
         draw_circle(Vector2(720, 350), 10, Color("#d9fbff"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(620, 305), "RUTA DE ENERGIA", Color("#9de9ee"))
+        draw_string(draw_font, Vector2(620, 305), "RUTA DE ENERGIA", Color("#9de9ee"))
 
     elif level == 3:
         draw_rect(Rect2(330, 350, 280, 58), Color("#39464a"))
@@ -1521,21 +1525,21 @@ func _draw_world1_level_story():
             draw_line(Vector2(x, 350), Vector2(x, 408), Color("#59666a"), 3)
         draw_rect(Rect2(600, 300, 95, 108), Color("#252d31"))
         draw_circle(Vector2(648, 322), 9, Color("#e2b85e"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(620, 280), "ANDEN", Color("#c6d1d3"))
+        draw_string(draw_font, Vector2(620, 280), "ANDEN", Color("#c6d1d3"))
 
     elif level == 4:
         draw_rect(Rect2(380, 375, 210, 32), Color("#3c4549"))
         draw_line(Vector2(420, 375), Vector2(450, 320), Color("#777f82"), 6)
         draw_line(Vector2(450, 320), Vector2(560, 320), Color("#777f82"), 6)
         draw_line(Vector2(560, 320), Vector2(590, 375), Color("#777f82"), 6)
-        draw_string(Control.new().get_theme_default_font(), Vector2(440, 305), "CARGA DETENIDA", Color("#c4cdcf"))
+        draw_string(draw_font, Vector2(440, 305), "CARGA DETENIDA", Color("#c4cdcf"))
 
     elif level == 5:
         draw_rect(Rect2(900, 245, 120, 165), Color("#22292d"))
         draw_rect(Rect2(915, 260, 90, 135), Color("#4a555a"))
         draw_rect(Rect2(925, 270, 70, 7), Color("#d5b45f"))
         draw_circle(Vector2(960, 315), 8, Color("#d5b45f"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(880, 225), "SEGURIDAD", Color("#d9dfe0"))
+        draw_string(draw_font, Vector2(880, 225), "SEGURIDAD", Color("#d9dfe0"))
 
     elif level == 6:
         draw_rect(Rect2(740, 315, 230, 90), Color("#343e42"))
@@ -1544,7 +1548,7 @@ func _draw_world1_level_story():
             draw_circle(Vector2(x, 355), 6, Color("#8fb9bd"))
         draw_line(Vector2(850, 315), Vector2(850, 270), Color("#6a777b"), 6)
         draw_circle(Vector2(850, 260), 10, Color("#e0b75c"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(770, 245), "SUBESTACION", Color("#c7d1d3"))
+        draw_string(draw_font, Vector2(770, 245), "SUBESTACION", Color("#c7d1d3"))
 
     elif level == 7:
         draw_rect(Rect2(900, 275, 145, 135), Color("#303a3e"))
@@ -1552,7 +1556,7 @@ func _draw_world1_level_story():
         for y in range(310, 370, 20):
             draw_line(Vector2(935, y), Vector2(1010, y), Color("#59686c"), 4)
         draw_circle(Vector2(1000, 305), 8, Color("#d8b65e"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(905, 255), "CONTROL", Color("#cbd5d7"))
+        draw_string(draw_font, Vector2(905, 255), "CONTROL", Color("#cbd5d7"))
 
     elif level == 8:
         draw_rect(Rect2(700, 335, 170, 70), Color("#4a4f50"))
@@ -1560,50 +1564,50 @@ func _draw_world1_level_story():
         draw_rect(Rect2(780, 315, 55, 20), Color("#7c8584"))
         draw_line(Vector2(720, 335), Vector2(750, 300), Color("#777e7e"), 4)
         draw_line(Vector2(835, 335), Vector2(805, 300), Color("#777e7e"), 4)
-        draw_string(Control.new().get_theme_default_font(), Vector2(730, 285), "ALMACEN", Color("#cbd1d2"))
+        draw_string(draw_font, Vector2(730, 285), "ALMACEN", Color("#cbd1d2"))
 
     elif level == 9:
         draw_line(Vector2(2380, 300), Vector2(2380, 230), Color("#4a565a"), 7)
         draw_line(Vector2(2720, 300), Vector2(2720, 230), Color("#4a565a"), 7)
         draw_line(Vector2(2380, 230), Vector2(2720, 230), Color("#4a565a"), 5)
-        draw_string(Control.new().get_theme_default_font(), Vector2(2480, 215), "GRUA DE MANTENIMIENTO", Color("#cbd4d5"))
+        draw_string(draw_font, Vector2(2480, 215), "GRUA DE MANTENIMIENTO", Color("#cbd4d5"))
 
     elif level == 10:
         draw_rect(Rect2(2320, 215, 380, 48), Color("#303a3d"))
         draw_rect(Rect2(2350, 190, 320, 25), Color("#4b575a"))
         draw_circle(Vector2(2635, 220), 15, Color("#d9fbff"))
         draw_arc(Vector2(2635, 220), 34 + sin(elapsed * 4.0) * 4.0, 0, PI * 2, 28, Color("#73d6df"), 3)
-        draw_string(Control.new().get_theme_default_font(), Vector2(2390, 180), "TORRE DE TRANSMISION", Color("#cbd5d7"))
+        draw_string(draw_font, Vector2(2390, 180), "TORRE DE TRANSMISION", Color("#cbd5d7"))
 
     elif level == 11:
         draw_arc(Vector2(3150, 285), 82, PI, PI * 2, 28, Color("#56676c"), 12)
         draw_arc(Vector2(3150, 285), 58, PI, PI * 2, 28, Color("#8bdde3"), 3)
         draw_line(Vector2(3060, 285), Vector2(2990, 285), Color("#48575b"), 10)
-        draw_string(Control.new().get_theme_default_font(), Vector2(2960, 245), "CONDUCTO", Color("#cbd5d7"))
+        draw_string(draw_font, Vector2(2960, 245), "CONDUCTO", Color("#cbd5d7"))
 
     elif level == 12:
         draw_rect(Rect2(3650, 160, 850, 270), Color("#151d22"))
         for x in range(3700, 4500, 100):
             draw_line(Vector2(x, 180), Vector2(x, 410), Color("#29353b"), 3)
-        draw_string(Control.new().get_theme_default_font(), Vector2(3820, 215), "INSTALACION SUBTERRANEA", Color("#8daab5"))
+        draw_string(draw_font, Vector2(3820, 215), "INSTALACION SUBTERRANEA", Color("#8daab5"))
 
     elif level == 13:
         draw_circle(Vector2(4050, 320), 82, Color("#202a30"))
         draw_arc(Vector2(4050, 320), 70, 0, PI * 2, 36, Color("#6a7b82"), 9)
         draw_arc(Vector2(4050, 320), 42, elapsed, elapsed + PI * 1.5, 24, Color("#56e0ff"), 5)
-        draw_string(Control.new().get_theme_default_font(), Vector2(3960, 220), "DESVIO", Color("#8daab5"))
+        draw_string(draw_font, Vector2(3960, 220), "DESVIO", Color("#8daab5"))
 
     elif level == 14:
         draw_line(Vector2(3800, 350), Vector2(4300, 350), Color("#56e0ff"), 5)
         draw_line(Vector2(4000, 350), Vector2(4050, 290), Color("#56e0ff"), 5)
         draw_line(Vector2(4050, 290), Vector2(4250, 290), Color("#56e0ff"), 5)
-        draw_string(Control.new().get_theme_default_font(), Vector2(3990, 260), "RUTA OCULTA", Color("#8ddde4"))
+        draw_string(draw_font, Vector2(3990, 260), "RUTA OCULTA", Color("#8ddde4"))
 
     elif level == 15:
         draw_rect(Rect2(500, 240, 180, 160), Color("#252e32"))
         draw_circle(Vector2(590, 270), 16, Color("#d34e4e"))
         draw_arc(Vector2(590, 270), 30 + sin(elapsed * 7.0) * 4.0, 0, PI * 2, 24, Color("#e96c6c"), 4)
-        draw_string(Control.new().get_theme_default_font(), Vector2(525, 220), "ALERTA", Color("#e3b7b7"))
+        draw_string(draw_font, Vector2(525, 220), "ALERTA", Color("#e3b7b7"))
 
     elif level == 16:
         draw_circle(Vector2(850, 350), 11, Color("#c9f7ff"))
@@ -1611,19 +1615,19 @@ func _draw_world1_level_story():
         draw_circle(Vector2(1120, 350), 12, Color("#c9f7ff"))
         draw_line(Vector2(850, 350), Vector2(980, 340), Color("#69cbd5"), 3)
         draw_line(Vector2(980, 340), Vector2(1120, 350), Color("#69cbd5"), 3)
-        draw_string(Control.new().get_theme_default_font(), Vector2(900, 305), "RASTRO", Color("#bdeef2"))
+        draw_string(draw_font, Vector2(900, 305), "RASTRO", Color("#bdeef2"))
 
     elif level == 17:
         for x in range(900, 1450, 110):
             draw_rect(Rect2(x, 345 - int(sin(elapsed * 2.5 + x) * 18), 55, 16), Color("#5d686c"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(1040, 245), "PERSECUCION", Color("#d2d7d8"))
+        draw_string(draw_font, Vector2(1040, 245), "PERSECUCION", Color("#d2d7d8"))
 
     elif level == 18:
         draw_rect(Rect2(1220, 190, 300, 220), Color("#252d31"))
         draw_rect(Rect2(1240, 210, 260, 180), Color("#101619"))
         draw_line(Vector2(1300, 210), Vector2(1300, 390), Color("#4e5b60"), 7)
         draw_line(Vector2(1440, 210), Vector2(1440, 390), Color("#4e5b60"), 7)
-        draw_string(Control.new().get_theme_default_font(), Vector2(1290, 180), "ENTRADA FINAL", Color("#cbd5d7"))
+        draw_string(draw_font, Vector2(1290, 180), "ENTRADA FINAL", Color("#cbd5d7"))
 
     elif level == 19:
         draw_rect(Rect2(900, 200, 600, 24), Color("#39454a"))
@@ -1631,7 +1635,7 @@ func _draw_world1_level_story():
         draw_line(Vector2(1470, 224), Vector2(1470, 400), Color("#515f64"), 5)
         for x in range(980, 1430, 90):
             draw_circle(Vector2(x, 300), 7, Color("#64767b"))
-        draw_string(Control.new().get_theme_default_font(), Vector2(1110, 180), "ANTESALA", Color("#bfcacc"))
+        draw_string(draw_font, Vector2(1110, 180), "ANTESALA", Color("#bfcacc"))
 
     elif level == 20:
         # Arena limpia: el guardian es la unica amenaza, sin enemigos basura.
@@ -1642,7 +1646,7 @@ func _draw_world1_level_story():
         draw_arc(Vector2(3420, 320), 105, 0, PI * 2, 48, Color("#5d9aa3"), 5)
         draw_circle(Vector2(3420, 320), 38, Color("#27353a"))
         draw_arc(Vector2(3420, 320), 52 + sin(elapsed * 5.0) * 5.0, 0, PI * 2, 32, Color("#8ee9ef"), 4)
-        draw_string(Control.new().get_theme_default_font(), Vector2(3140, 180), "NUCLEO DE LA CIUDAD", Color("#cbd5d7"))
+        draw_string(draw_font, Vector2(3140, 180), "NUCLEO DE LA CIUDAD", Color("#cbd5d7"))
 
         if enemy_alive:
             draw_circle(Vector2(enemy_x, 320), 36, Color("#182126"))
@@ -1669,7 +1673,7 @@ func _draw_world1_underground():
 
     draw_line(Vector2(4100, 355), Vector2(4100, 315), Color("#777f84"), 8)
     draw_circle(Vector2(4100, 310), 13, Color("#56e0ff") if world1_underground_lever_activated else Color("#ffbd45"))
-    draw_string(Control.new().get_theme_default_font(), Vector2(4040, 280), "PALANCA", Color("#d8fbff"))
+    draw_string(draw_font, Vector2(4040, 280), "PALANCA", Color("#d8fbff"))
 
     if world1_underground_lever_activated:
         draw_rect(Rect2(4302, 285, 36, 105), Color(0.25, 0.8, 0.65, 0.25))
@@ -1685,8 +1689,8 @@ func _draw_world1_underground():
     draw_line(Vector2(4500, 255), Vector2(4630, 210), Color("#56e0ff"), 5)
     draw_arc(Vector2(4630, 210), 18 + sin(elapsed * 4) * 3, 0, PI * 2, 20, Color("#d8fbff"), 3)
 
-    draw_string(Control.new().get_theme_default_font(), Vector2(3710, 470), "CONDUCTO SUBTERRANEO", Color("#8daab5"))
-    draw_string(Control.new().get_theme_default_font(), Vector2(4380, 470), "ENERGIA DESVIADA", Color("#56e0ff"))
+    draw_string(draw_font, Vector2(3710, 470), "CONDUCTO SUBTERRANEO", Color("#8daab5"))
+    draw_string(draw_font, Vector2(4380, 470), "ENERGIA DESVIADA", Color("#56e0ff"))
 
 func _create_hazards():
     for i in range(hazard_positions.size()):
