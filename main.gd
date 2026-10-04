@@ -11,6 +11,9 @@ var enemy_x = 2820.0
 var enemy_direction = -1
 var enemy_speed = 80.0
 var damage_cooldown = 0.0
+var guardian_hits = 0
+var guardian_max_hits = 3
+var guardian_hit_cooldown = 0.0
 
 var hazard_positions = [
     Vector2(930, 412),
@@ -45,6 +48,8 @@ func _process(delta):
             message_timer -= delta
         if damage_cooldown > 0:
             damage_cooldown -= delta
+        if guardian_hit_cooldown > 0:
+            guardian_hit_cooldown -= delta
 
         _update_enemy(delta)
         _check_attack()
@@ -70,9 +75,14 @@ func _check_attack():
 
     if Input.is_key_pressed(KEY_J):
         var player = get_node_or_null("Stikman")
-        if player != null and abs(player.position.x - enemy_x) < 115 and abs(player.position.y - 350) < 120:
-            enemy_alive = false
-            message_timer = 1.2
+        if player != null and abs(player.position.x - enemy_x) < 125 and abs(player.position.y - 350) < 120 and guardian_hit_cooldown <= 0:
+            guardian_hits += 1
+            guardian_hit_cooldown = 0.45
+            enemy_x += enemy_direction * 35
+            message_timer = 0.8
+            if guardian_hits >= guardian_max_hits:
+                enemy_alive = false
+                message_timer = 1.5
 
 func _check_enemy_contact():
     if not enemy_alive or damage_cooldown > 0:
@@ -148,14 +158,16 @@ func _draw():
 
     # Primer enemigo de la selva
     if enemy_alive:
-        draw_circle(Vector2(enemy_x, 350), 30, Color("#2a1b17"))
-        draw_circle(Vector2(enemy_x, 320), 20, Color("#3b2520"))
+        draw_circle(Vector2(enemy_x, 350), 42, Color("#201512"))
+        draw_circle(Vector2(enemy_x, 315), 27, Color("#4a2921"))
         draw_circle(Vector2(enemy_x - 8, 318), 4, Color("#ffcf55"))
         draw_circle(Vector2(enemy_x + 8, 318), 4, Color("#ffcf55"))
         draw_line(Vector2(enemy_x - 18, 350), Vector2(enemy_x - 38, 375), Color("#2a1b17"), 8)
         draw_line(Vector2(enemy_x + 18, 350), Vector2(enemy_x + 38, 375), Color("#2a1b17"), 8)
         draw_line(Vector2(enemy_x - 12, 375), Vector2(enemy_x - 20, 410), Color("#2a1b17"), 9)
         draw_line(Vector2(enemy_x + 12, 375), Vector2(enemy_x + 20, 410), Color("#2a1b17"), 9)
+        draw_rect(Rect2(enemy_x - 55, 260, 110, 10), Color("#3a2424"))
+        draw_rect(Rect2(enemy_x - 55, 260, 110.0 * (1.0 - float(guardian_hits) / float(guardian_max_hits)), 10), Color("#ff5a5a"))
 
     # Portal final: permanece bloqueado mientras el Guardian siga vivo
     var portal_center = Vector2(3180, 350)
@@ -283,7 +295,7 @@ func _update_ui():
         else:
             hud.get_node("Message").text = "¡ENEMIGO DERROTADO!"
     elif enemy_alive:
-        hud.get_node("Message").text = "¡ENEMIGO ADELANTE!  Pulsa J para atacar"
+        hud.get_node("Message").text = "¡GUARDIAN ADELANTE!  J para atacar  |  ENERGIA: %d/%d" % [guardian_max_hits - guardian_hits, guardian_max_hits]
     else:
         hud.get_node("Message").text = "Encuentra el portal al final de la selva"
 
