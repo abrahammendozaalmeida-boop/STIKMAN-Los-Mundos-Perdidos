@@ -1306,33 +1306,174 @@ func _draw_world1():
     if world1_underground_mode:
         _draw_world1_underground()
         return
-    draw_rect(Rect2(0, 0, 3600, 540), Color("#7fc8f2"))
-    draw_circle(Vector2(720, 85), 55, Color("#fff1a8"))
 
-    for x in range(120, 3500, 310):
-        var h = 150 + int(abs(sin(float(x) * 0.07)) * 130)
-        draw_rect(Rect2(x, 430 - h, 210, h), Color("#d9d2c3"))
-        for row in range(3):
+    # Ciudad abandonada: arquitectura, carretera y servicios tienen una
+    # funcion clara. La energia anomala se integra en instalaciones existentes.
+    draw_rect(Rect2(0, 0, 3600, 540), Color("#6d8290"))
+    draw_rect(Rect2(0, 0, 3600, 255), Color("#8195a0"))
+    draw_circle(Vector2(760, 82), 48, Color("#d7d3bb"))
+
+    # Horizonte y silueta de la ciudad.
+    for x in range(40, 3600, 280):
+        var h = 135 + int(abs(sin(float(x) * 0.031)) * 115)
+        var facade = Color("#6b7072") if int(x / 280) % 2 == 0 else Color("#777b7b")
+        draw_rect(Rect2(x, 430 - h, 205, h), facade)
+        draw_rect(Rect2(x + 10, 430 - h, 185, 6), Color("#4e5457"))
+        for row in range(4):
             for col in range(4):
-                draw_rect(Rect2(x + 28 + col * 43, 430 - h + 42 + row * 45, 20, 28), Color("#8bc6df"))
+                var wx = x + 28 + col * 40
+                var wy = 430 - h + 32 + row * 43
+                draw_rect(Rect2(wx, wy, 17, 24), Color("#a8b9bd"))
+                draw_rect(Rect2(wx + 3, wy + 3, 11, 18), Color("#56676d"))
 
-    draw_rect(Rect2(0, 430, 3600, 110), Color("#45484d"))
-    draw_rect(Rect2(0, 430, 3600, 12), Color("#c6c8c9"))
+    # Edificios funcionales destacados: estacion, control y subestacion.
+    draw_rect(Rect2(360, 300, 250, 130), Color("#555d61"))
+    draw_rect(Rect2(375, 315, 220, 18), Color("#30383c"))
+    draw_rect(Rect2(395, 350, 175, 58), Color("#3e484d"))
+    for x in range(405, 565, 32):
+        draw_rect(Rect2(x, 362, 18, 28), Color("#8da2a8"))
+    draw_rect(Rect2(1180, 275, 250, 155), Color("#4d565a"))
+    draw_rect(Rect2(1195, 290, 220, 28), Color("#273136"))
+    draw_rect(Rect2(1240, 335, 135, 65), Color("#384247"))
+    draw_rect(Rect2(1280, 245, 55, 30), Color("#68767a"))
+    draw_rect(Rect2(2860, 285, 250, 145), Color("#4b5558"))
+    draw_rect(Rect2(2880, 300, 210, 24), Color("#242d31"))
+    draw_circle(Vector2(2985, 350), 28, Color("#4b6871"))
+    draw_circle(Vector2(2985, 350), 13, Color("#8fd8e6"))
 
-    # Visuales de plataformas del nivel: usan exactamente los mismos datos que las colisiones.
+    # Calle: banqueta, asfalto, separadores y luminarias.
+    draw_rect(Rect2(0, 408, 3600, 22), Color("#a2a2a0"))
+    draw_rect(Rect2(0, 430, 3600, 110), Color("#303438"))
+    draw_rect(Rect2(0, 430, 3600, 5), Color("#1f2326"))
+    draw_rect(Rect2(0, 438, 3600, 3), Color("#565b5e"))
+    for x in range(55, 3600, 145):
+        draw_rect(Rect2(x, 482, 72, 5), Color("#c8b86d"))
+
+    for x in range(160, 3500, 420):
+        draw_line(Vector2(x, 408), Vector2(x, 315), Color("#2b3033"), 5)
+        draw_line(Vector2(x, 315), Vector2(x + 34, 315), Color("#2b3033"), 4)
+        draw_circle(Vector2(x + 40, 315), 7, Color("#d4c98c"))
+
+    # Vehiculos detenidos: solo en la calle.
+    for x in range(470, 3300, 610):
+        draw_rect(Rect2(x, 388, 112, 35), Color("#4b5053"))
+        draw_rect(Rect2(x + 16, 370, 78, 25), Color("#656d70"))
+        draw_rect(Rect2(x + 25, 375, 28, 15), Color("#8ea6ad"))
+        draw_rect(Rect2(x + 57, 375, 28, 15), Color("#8ea6ad"))
+        draw_circle(Vector2(x + 22, 423), 11, Color("#1c2022"))
+        draw_circle(Vector2(x + 90, 423), 11, Color("#1c2022"))
+
+    # Tuberias visibles: conectan los edificios con la red de energia.
+    draw_line(Vector2(610, 335), Vector2(1180, 335), Color("#3f484c"), 9)
+    draw_line(Vector2(1430, 345), Vector2(2290, 345), Color("#3f484c"), 9)
+    draw_line(Vector2(2290, 345), Vector2(2860, 330), Color("#3f484c"), 9)
+    draw_circle(Vector2(610, 335), 7, Color("#6f7b80"))
+    draw_circle(Vector2(1180, 335), 7, Color("#6f7b80"))
+
+    # Plataformas jugables: ahora parecen estructuras urbanas reales.
     var layout = level_layouts[clamp(world1_level - 1, 0, level_layouts.size() - 1)]
     for item in layout:
         var platform_rect = Rect2(item[0] - item[2] / 2.0, item[1] - item[3] / 2.0, item[2], item[3])
-        draw_rect(platform_rect, Color("#26332b"))
-        draw_rect(Rect2(platform_rect.position, Vector2(platform_rect.size.x, 5)), Color("#56a36f"))
+        draw_rect(platform_rect, Color("#454d50"))
+        draw_rect(Rect2(platform_rect.position, Vector2(platform_rect.size.x, 5)), Color("#9a9b91"))
         draw_line(
-            platform_rect.position + Vector2(10, platform_rect.size.y - 3),
-            platform_rect.position + Vector2(platform_rect.size.x - 10, platform_rect.size.y - 3),
-            Color("#151c18"),
+            platform_rect.position + Vector2(8, platform_rect.size.y - 4),
+            platform_rect.position + Vector2(platform_rect.size.x - 8, platform_rect.size.y - 4),
+            Color("#262b2d"),
             2
         )
+        for bx in range(int(platform_rect.position.x) + 18, int(platform_rect.end.x) - 10, 38):
+            draw_line(Vector2(bx, platform_rect.end.y), Vector2(bx - 5, platform_rect.end.y + 10), Color("#343b3e"), 3)
 
-    # Visuales de interruptores, barreras y obstaculos moviles.
+    # Señales de energia: cada una esta colocada sobre un nodo de la red.
+    for i in range(world1_terminal_positions.size()):
+        var terminal = world1_terminal_positions[i]
+        draw_rect(Rect2(terminal.x - 30, 315, 60, 70), Color("#252c30"))
+        draw_rect(Rect2(terminal.x - 22, 325, 44, 50), Color("#59666b"))
+        draw_rect(Rect2(terminal.x - 13, 335, 26, 30), Color("#26363b"))
+        draw_circle(terminal, 8, Color("#70d6e5") if world1_terminal_activated[i] else Color("#59676b"))
+        draw_arc(terminal, 16, 0, PI * 2, 24, Color("#9beaf1") if world1_signal_collected[i] else Color("#69777b"), 3)
+
+    # Señales recogibles: pequeñas fuentes de energia que flotan junto a la red.
+    for i in range(world1_item_positions.size()):
+        if not world1_signal_collected[i]:
+            var item = world1_item_positions[i]
+            draw_circle(item, 13, Color(0.3, 0.75, 0.85, 0.18))
+            draw_arc(item, 13, 0, PI * 2, 20, Color("#b7edf2"), 2)
+            draw_circle(item, 5, Color("#d9fbff"))
+
+    # Llave y puerta: la llave pertenece al circuito de seguridad.
+    if world1_ready and not world1_key_collected:
+        draw_circle(world1_key_position, 10, Color("#d7b45c"))
+        draw_rect(Rect2(world1_key_position.x - 4, world1_key_position.y - 4, 22, 8), Color("#e4c879"))
+        draw_circle(world1_key_position + Vector2(17, 0), 5, Color("#f1d890"))
+
+    if not world1_door_open:
+        draw_rect(Rect2(world1_door_x - 24, 235, 48, 195), Color("#252b2e"))
+        draw_rect(Rect2(world1_door_x - 17, 245, 34, 175), Color("#4d585c"))
+        draw_rect(Rect2(world1_door_x - 10, 255, 20, 155), Color("#30383c"))
+        draw_circle(Vector2(world1_door_x, 340), 7, Color("#d7b45c"))
+    else:
+        draw_rect(Rect2(world1_door_x - 4, 245, 8, 175), Color(0.35, 0.85, 0.7, 0.35))
+
+    # Caja y placa: el peso de la caja activa fisicamente la placa.
+    draw_rect(Rect2(world1_box_position.x - 38, 352, 76, 48), Color("#70543a"))
+    draw_rect(Rect2(world1_box_position.x - 31, 359, 62, 34), Color("#9a7650"))
+    draw_line(world1_box_position + Vector2(-24, -16), world1_box_position + Vector2(24, 16), Color("#4d3928"), 4)
+    draw_line(world1_box_position + Vector2(24, -16), world1_box_position + Vector2(-24, 16), Color("#4d3928"), 4)
+    var switch_plate = Vector2(1960, 410)
+    draw_rect(Rect2(switch_plate.x - 46, 402, 92, 12), Color("#5f676a") if not world1_box_on_switch else Color("#65aeb0"))
+    draw_circle(switch_plate, 7, Color("#899497") if not world1_box_on_switch else Color("#b8f4f2"))
+
+    # Ruta secreta: una pasarela de mantenimiento, no un objeto aleatorio.
+    if world1_secret_gate_open:
+        draw_rect(Rect2(2760, 365, 300, 34), Color("#3f4b4f"))
+        draw_rect(Rect2(2760, 365, 300, 5), Color("#73c7cf"))
+        for x in range(2790, 3060, 45):
+            draw_line(Vector2(x, 365), Vector2(x, 399), Color("#252b2e"), 3)
+    else:
+        draw_rect(Rect2(2760, 365, 300, 34), Color("#2b3033"))
+        draw_line(Vector2(2760, 365), Vector2(3060, 399), Color("#50585b"), 3)
+
+    # Plataforma movil: esta unida a la estructura superior.
+    draw_line(Vector2(2450, 315), Vector2(2450, 255), Color("#454d50"), 5)
+    draw_line(Vector2(2650, 315), Vector2(2650, 255), Color("#454d50"), 5)
+    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 18), Color("#4e585c"))
+    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 5), Color("#a1aaa8"))
+
+    # Zona elevada y pista de la señal desconocida.
+    if world1_rooftop_discovered:
+        draw_rect(Rect2(2380, 245, 330, 18), Color("#454d50"))
+        draw_rect(Rect2(2380, 245, 330, 5), Color("#a1d4d8"))
+        draw_circle(Vector2(2635, 220), 12, Color("#d9fbff"))
+        draw_arc(Vector2(2635, 220), 23 + sin(elapsed * 4) * 3, 0, PI * 2, 24, Color("#8bd9df"), 2)
+
+    # Conducto: una entrada industrial reconocible que lleva a la zona subterranea.
+    if world1_mystery_clue_collected:
+        draw_rect(Rect2(3070, 270, 160, 120), Color("#252c30"))
+        draw_rect(Rect2(3085, 285, 130, 105), Color("#101619"))
+        draw_arc(Vector2(3150, 285), 55, PI, PI * 2, 24, Color("#78cdd5"), 5)
+        draw_rect(Rect2(3138, 330, 24, 60), Color("#303a3e"))
+
+    # Interruptor final conectado a la red.
+    draw_line(Vector2(2860, 335), Vector2(world1_switch_position.x, world1_switch_position.y), Color("#59686c"), 6)
+    draw_rect(Rect2(world1_switch_position.x - 22, 320, 44, 60), Color("#252c30"))
+    draw_circle(world1_switch_position + Vector2(0, -5), 12, Color("#73cfd6") if world1_switch_activated else Color("#d7b45c"))
+    draw_arc(world1_switch_position + Vector2(0, -5), 19, 0, PI * 2, 24, Color("#9beaf1") if world1_switch_activated else Color("#687477"), 2)
+
+    # Portal: claramente marca la salida, no aparece hasta que el circuito esta activo.
+    var p = Vector2(world1_portal_x, 350)
+    if world1_switch_activated:
+        draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.14))
+        draw_arc(p, 58, 0, PI * 2, 48, Color("#65cbd5"), 7)
+        draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 3)
+        draw_circle(p, 8, Color("#ffffff"))
+    else:
+        draw_arc(p, 58, 0, PI * 2, 48, Color("#566064"), 6)
+        draw_line(p + Vector2(-38, -38), p + Vector2(38, 38), Color("#30383c"), 7)
+        draw_line(p + Vector2(38, -38), p + Vector2(-38, 38), Color("#30383c"), 7)
+
+    # Elementos de conexion visibles de los niveles cortos.
     var interactive_parent = get_node_or_null("LevelInteractives")
     if interactive_parent != null:
         for interactive in interactive_parent.get_children():
@@ -1340,134 +1481,23 @@ func _draw_world1():
                 var bx = interactive.position.x
                 var by = interactive.position.y
                 var open_now = world1_switch_activated
-                draw_rect(Rect2(bx - 14, by - 65, 28, 130), Color("#4b555d") if not open_now else Color(0.25, 0.8, 0.65, 0.28))
-                draw_rect(Rect2(bx - 8, by - 55, 16, 110), Color("#7b8790") if not open_now else Color("#2d806a"))
+                draw_rect(Rect2(bx - 13, by - 65, 26, 130), Color("#424b4f") if not open_now else Color(0.3, 0.8, 0.7, 0.25))
+                draw_line(Vector2(bx, by - 55), Vector2(bx, by + 55), Color("#9ca6a8") if not open_now else Color("#5eaa9b"), 5)
             elif interactive.has_meta("switch_id"):
                 var sx = interactive.position.x
                 var sy = interactive.position.y
-                draw_circle(Vector2(sx, sy), 30, Color(0.1, 0.75, 0.85, 0.18))
-                draw_rect(Rect2(sx - 20, sy - 18, 40, 36), Color("#343b40"))
-                draw_circle(Vector2(sx, sy), 11, Color("#7dffe8") if world1_switch_activated else Color("#ffbd45"))
-                draw_string(Control.new().get_theme_default_font(), Vector2(sx - 48, sy - 40), "ACTIVAR", Color("#d8fbff"))
+                draw_line(Vector2(sx, sy + 18), Vector2(sx, sy + 55), Color("#3d474b"), 5)
+                draw_rect(Rect2(sx - 21, sy - 17, 42, 34), Color("#343d41"))
+                draw_circle(Vector2(sx, sy), 10, Color("#70d6e5") if world1_switch_activated else Color("#d7b45c"))
             elif interactive.has_meta("start_x"):
                 var mx = interactive.position.x
                 var my = interactive.position.y
-                draw_rect(Rect2(mx - 55, my - 12, 110, 24), Color("#59636b"))
-                draw_rect(Rect2(mx - 48, my - 7, 96, 6), Color("#e0b44c"))
-                draw_circle(Vector2(mx - 38, my + 8), 4, Color("#1a2024"))
-                draw_circle(Vector2(mx + 38, my + 8), 4, Color("#1a2024"))
-
-    for x in range(40, 3600, 120):
-        draw_rect(Rect2(x, 480, 65, 8), Color("#e7d86d"))
-
-    for x in range(80, 3500, 260):
-        draw_rect(Rect2(x, 355, 18, 75), Color("#6b4329"))
-        draw_circle(Vector2(x + 9, 340), 38, Color("#3f8f4a"))
-        draw_circle(Vector2(x - 12, 350), 28, Color("#4ca957"))
-
-    for x in range(400, 3300, 600):
-        draw_rect(Rect2(x, 405, 100, 28), Color("#d94b45"))
-        draw_rect(Rect2(x + 18, 390, 64, 22), Color("#b7d9e8"))
-        draw_circle(Vector2(x + 22, 433), 12, Color("#202328"))
-        draw_circle(Vector2(x + 78, 433), 12, Color("#202328"))
-
-    # Nodos de energía: cada señal tiene un lugar específico al que hay
-    # que regresar para activarla.
-    for i in range(world1_terminal_positions.size()):
-        var terminal = world1_terminal_positions[i]
-        if world1_terminal_activated[i]:
-            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#1e9f8a"))
-            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#7dffe8"))
-            draw_circle(terminal, 10, Color("#ffffff"))
-        elif world1_signal_collected[i]:
-            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#d4a72c"))
-            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#ffe57d"))
-            draw_circle(terminal, 10, Color("#ffffff"))
-        else:
-            draw_rect(Rect2(terminal.x - 32, 315, 64, 70), Color("#50555a"))
-            draw_rect(Rect2(terminal.x - 20, 327, 40, 42), Color("#737a80"))
-            draw_circle(terminal, 10, Color("#b8c0c5"))
-
-    for i in range(world1_item_positions.size()):
-        if not world1_signal_collected[i]:
-            var item = world1_item_positions[i]
-            draw_circle(item, 18, Color("#ffd85a"))
-            draw_circle(item, 9, Color("#fff4b0"))
-            draw_line(item + Vector2(-8, 0), item + Vector2(8, 0), Color("#ffffff"), 3)
-            draw_line(item + Vector2(0, -8), item + Vector2(0, 8), Color("#ffffff"), 3)
-
-    # Llave que aparece después de activar los tres nodos.
-    if world1_ready and not world1_key_collected:
-        draw_circle(world1_key_position, 16, Color("#f5c542"))
-        draw_circle(world1_key_position, 7, Color("#fff3a1"))
-        draw_line(world1_key_position + Vector2(12, 0), world1_key_position + Vector2(28, 0), Color("#f5c542"), 5)
-
-    # Puerta que requiere la llave.
-    if not world1_door_open:
-        draw_rect(Rect2(world1_door_x - 18, 250, 36, 180), Color("#34383d"))
-        draw_rect(Rect2(world1_door_x - 12, 260, 24, 160), Color("#5d646b"))
-        draw_circle(Vector2(world1_door_x, 340), 6, Color("#ffd85a"))
-    else:
-        draw_rect(Rect2(world1_door_x - 6, 250, 12, 180), Color(0.25, 0.8, 0.65, 0.35))
-
-    # Camino secreto: puede abrirse por el puzzle de la caja.
-    if world1_secret_gate_open:
-        draw_rect(Rect2(2760, 365, 300, 34), Color("#244e5b"))
-        draw_rect(Rect2(2760, 365, 300, 6), Color("#56e0ff"))
-        for x in range(2790, 3060, 45):
-            draw_circle(Vector2(x, 382), 5, Color("#b9f8ff"))
-    else:
-        draw_rect(Rect2(2760, 365, 300, 34), Color("#30343a"))
-
-    # Puzzle de la caja y placa.
-    var switch_plate = Vector2(1960, 410)
-    draw_rect(Rect2(switch_plate.x - 45, 402, 90, 12), Color("#56e0ff") if world1_box_on_switch else Color("#555b60"))
-    draw_circle(switch_plate, 8, Color("#d8fbff") if world1_box_on_switch else Color("#777d82"))
-
-    # Objetos interactivos del escenario.
-    draw_rect(Rect2(world1_box_position.x - 38, 352, 76, 48), Color("#9b6a3d"))
-    draw_rect(Rect2(world1_box_position.x - 30, 360, 60, 32), Color("#c18a50"))
-    draw_line(world1_box_position + Vector2(-25, -18), world1_box_position + Vector2(25, 18), Color("#6b4528"), 4)
-    draw_line(world1_box_position + Vector2(25, -18), world1_box_position + Vector2(-25, 18), Color("#6b4528"), 4)
-
-    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 18), Color("#59636b"))
-    draw_rect(Rect2(world1_platform_x - 70, 300, 140, 5), Color("#62d9ff"))
-
-    # Zona elevada descubierta con la plataforma.
-    if world1_rooftop_discovered:
-        draw_rect(Rect2(2380, 245, 330, 18), Color("#343f46"))
-        draw_rect(Rect2(2380, 245, 330, 5), Color("#56e0ff"))
-        draw_circle(Vector2(2635, 220), 18, Color("#b9f8ff"))
-        draw_circle(Vector2(2635, 220), 9, Color("#ffffff"))
-        if not world1_mystery_clue_collected:
-            draw_arc(Vector2(2635, 220), 28 + sin(elapsed * 4) * 4, 0, PI * 2, 24, Color("#d8fbff"), 2)
-        draw_string(Control.new().get_theme_default_font(), Vector2(2420, 230), "SEÑAL DESCONOCIDA", Color("#d8fbff"))
-
-    # Destino de la cuarta señal: entrada al conducto.
-    if world1_mystery_clue_collected:
-        draw_rect(Rect2(3070, 270, 160, 120), Color("#20282e"))
-        draw_rect(Rect2(3085, 285, 130, 105), Color("#0c1115"))
-        draw_arc(Vector2(3150, 285), 55, PI, PI * 2, 24, Color("#56e0ff"), 5)
-        if not world1_mystery_destination_found:
-            draw_circle(Vector2(3150, 285), 10 + sin(elapsed * 4) * 3, Color("#d8fbff"))
-
-    # Interruptor final.
-    draw_rect(Rect2(world1_switch_position.x - 24, 320, 48, 60), Color("#34383d"))
-    draw_circle(world1_switch_position + Vector2(0, -5), 13, Color("#56e0ff") if world1_switch_activated else Color("#ffbd45"))
-
-    var p = Vector2(world1_portal_x, 350)
-    if world1_switch_activated:
-        draw_circle(p, 72, Color(0.25, 0.85, 0.95, 0.16))
-        draw_arc(p, 58, 0, PI * 2, 48, Color("#56e0ff"), 8)
-        draw_arc(p, 42, 0, PI * 2, 48, Color("#d8fbff"), 4)
-        draw_circle(p, 8, Color("#ffffff"))
-    else:
-        draw_circle(p, 72, Color(0.35, 0.12, 0.12, 0.18))
-        draw_arc(p, 58, 0, PI * 2, 48, Color("#8b3d3d"), 8)
-        draw_line(p + Vector2(-38, -38), p + Vector2(38, 38), Color("#ff5a5a"), 8)
-        draw_line(p + Vector2(38, -38), p + Vector2(-38, 38), Color("#ff5a5a"), 8)
+                draw_line(Vector2(mx - 45, my - 20), Vector2(mx + 45, my - 20), Color("#454d50"), 4)
+                draw_rect(Rect2(mx - 55, my - 10, 110, 20), Color("#5a6467"))
+                draw_rect(Rect2(mx - 46, my - 6, 92, 5), Color("#b8a66d"))
 
 func _draw_world1_underground():
+
     draw_rect(Rect2(3600, 0, 1100, 540), Color("#10171d"))
     draw_rect(Rect2(3600, 0, 1100, 430), Color("#18242b"))
     draw_rect(Rect2(3550, 430, 1200, 110), Color("#252b30"))
@@ -1919,6 +1949,12 @@ func _update_ui():
 
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
     hud.get_node("World").text = "MUNDO 1 • NIVEL %d/20: %s" % [world1_level, world1_level_titles[world1_level - 1]] if world1_mode else "PROLOGO: LA SELVA"
+    if has_node("HUD/Goal"):
+        if world1_mode:
+            get_node("HUD/Goal").text = "OBJETIVO: " + level_objectives[clamp(world1_level - 1, 0, level_objectives.size() - 1)]
+        else:
+            get_node("HUD/Goal").text = "OBJETIVO: Explora la selva, derrota al guardian y alcanza el portal."
+
     if world1_mode:
         var activated_count = 0
         for activated in world1_terminal_activated:
