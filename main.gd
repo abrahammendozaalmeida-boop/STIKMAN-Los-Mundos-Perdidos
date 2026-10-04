@@ -238,6 +238,7 @@ func _ready():
     update()
 
 func _process(delta):
+    _update_moving_level_objects(delta)
     _check_level_completion()
     _update_dialogue(delta)
     if game_started and not paused:
@@ -1556,6 +1557,76 @@ func _show_level_intro(level_number):
     var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
     _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
 
+func _build_interactive_level_objects():
+    # Objetos interactivos ligeros: se adaptan al nivel y no requieren
+    # recursos externos.
+    var parent = Node2D.new()
+    parent.name = "LevelInteractives"
+    add_child(parent)
+
+    var level = world1_level
+    if level == 2 or level == 3:
+        _create_level_switch(parent, Vector2(900, 330), "INTERRUPTOR", 1)
+        _create_level_barrier(parent, Vector2(1180, 410), "COMPUERTA")
+    elif level == 4 or level == 5:
+        _create_level_mover(parent, Vector2(900, 330), 100)
+        _create_level_switch(parent, Vector2(1250, 360), "GRUA", 2)
+    elif level == 6 or level == 7:
+        _create_level_switch(parent, Vector2(1050, 300), "GENERADOR", 3)
+        _create_level_barrier(parent, Vector2(1350, 350), "BARRERA")
+    elif level == 8 or level == 9:
+        _create_level_mover(parent, Vector2(1050, 260), 140)
+        _create_level_switch(parent, Vector2(1450, 320), "PLATAFORMA", 4)
+    elif level >= 10 and level <= 15:
+        _create_level_switch(parent, Vector2(1050, 250), "ENERGIA", 5)
+        _create_level_barrier(parent, Vector2(1450, 330), "PUERTA", 6)
+    elif level >= 16 and level <= 19:
+        _create_level_mover(parent, Vector2(1100, 280), 180)
+        _create_level_barrier(parent, Vector2(1500, 300), "BLOQUEO", 7)
+
+func _create_level_switch(parent, pos, label_text, id):
+    var area = Area2D.new()
+    area.position = pos
+    area.name = "Switch_%d" % id
+    var shape = CollisionShape2D.new()
+    var circle = CircleShape2D.new()
+    circle.radius = 28
+    shape.shape = circle
+    area.add_child(shape)
+    parent.add_child(area)
+    area.connect("body_entered", self, "_on_level_switch_body_entered", [id, label_text])
+
+func _create_level_barrier(parent, pos, label_text):
+    var body = StaticBody2D.new()
+    body.position = pos
+    body.name = "Barrier_%s" % label_text
+    var shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(14, 65)
+    shape.shape = rect
+    body.add_child(shape)
+    parent.add_child(body)
+
+func _create_level_mover(parent, pos, distance):
+    var body = KinematicBody2D.new()
+    body.position = pos
+    body.name = "MovingObstacle"
+    body.set_meta("start_x", pos.x)
+    body.set_meta("distance", distance)
+    body.set_meta("phase", 0.0)
+    var shape = CollisionShape2D.new()
+    var rect = RectangleShape2D.new()
+    rect.extents = Vector2(55, 12)
+    shape.shape = rect
+    body.add_child(shape)
+    parent.add_child(body)
+
+func _on_level_switch_body_entered(body, id, label_text):
+    if body != get_node_or_null("Stikman") or dialogue_active:
+        return
+    get_node("HUD/Message").text = "%s ACTIVADO" % label_text
+    _save_game()
+
 func _build_level_objects():
     var items = level_hazards[clamp(world1_level - 1, 0, level_hazards.size() - 1)]
     var player = get_node_or_null("Stikman")
@@ -1715,3 +1786,15 @@ func _update_ui():
     else:
         hud.get_node("Message").text = "Encuentra el portal al final de la selva"
 
+
+func _update_moving_level_objects(delta):
+    var parent = get_node_or_null("LevelInteractives")
+    if parent == null:
+        return
+    for child in parent.get_children():
+        if child.has_meta("start_x"):
+            var phase = float(child.get_meta("phase")) + delta
+            child.set_meta("phase", phase)
+            var start_x = float(child.get_meta("start_x"))
+            var distance = float(child.get_meta("distance"))
+            child.position.x = start_x + sin(phase * 1.7) * distance
