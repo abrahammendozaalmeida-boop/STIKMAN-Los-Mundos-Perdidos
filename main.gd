@@ -136,7 +136,7 @@ func _create_coins():
         area.add_child(shape)
         add_child(area)
 
-        area.connect("body_entered", self, "_on_collectible_body_entered")
+        area.connect("body_entered", self, "_on_collectible_body_entered", [area])
 
 func _create_exit():
     var area = Area2D.new()
@@ -167,21 +167,17 @@ func _on_hazard_body_entered(body):
 
     _update_ui()
 
-func _on_collectible_body_entered(body):
+func _on_collectible_body_entered(body, area):
     if body.name != "Stikman" or game_over or finished:
         return
+    if not is_instance_valid(area):
+        return
+    if not area.is_in_group("collectible"):
+        return
 
-    var area = body.get_world_2d().direct_space_state.intersect_point(
-        body.global_position, 32, [], 2147483647, true, true
-    )
-
-    # Buscar cristales cercanos y recogerlos por nombre.
-    for child in get_children():
-        if child.is_in_group("collectible") and child.overlaps_body(body):
-            coins += 1
-            child.queue_free()
-            break
-
+    coins += 1
+    area.queue_free()
+    message_timer = 0.6
     _update_ui()
 
 func _on_exit_body_entered(body):
