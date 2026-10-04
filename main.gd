@@ -305,7 +305,7 @@ func _create_menu_ui():
     menu_panel = Panel.new()
     menu_panel.name = "MenuPanel"
     menu_panel.rect_position = Vector2(250, 55)
-    menu_panel.rect_size = Vector2(460, 430)
+    menu_panel.rect_size = Vector2(460, 480)
     menu_layer.add_child(menu_panel)
 
     menu_title = Label.new()
@@ -360,6 +360,7 @@ func _show_main_menu():
 func _start_game():
     game_started = true
     paused = false
+    dialogue_active = false
     menu_panel.visible = false
     var player = get_node_or_null("Stikman")
     if player != null:
@@ -421,12 +422,13 @@ func _menu_level_select():
         var row = int(i / 2)
         var button = Button.new()
         button.text = "NIVEL %d • %s" % [i + 1, world1_level_titles[i]]
-        button.rect_position = Vector2(35 + col * 205, 115 + row * 32)
-        button.rect_size = Vector2(195, 29)
+        button.rect_position = Vector2(20 + col * 215, 120 + row * 29)
+        button.rect_size = Vector2(205, 26)
+        button.add_color_override("font_size", 12)
         button.connect("pressed", self, "_select_level_%d" % (i + 1))
         menu_panel.add_child(button)
         menu_buttons.append(button)
-    _add_menu_button("VOLVER", "_menu_back", 450)
+    _add_menu_button("VOLVER", "_menu_back", 430)
 
 func _select_level_1(): _select_level(1)
 func _select_level_2(): _select_level(2)
@@ -1730,49 +1732,6 @@ func _on_level_switch_body_entered(body, id, label_text):
     _save_game()
     update()
 
-func _create_level_switch(parent, pos, label_text, id):
-    var area = Area2D.new()
-    area.position = pos
-    area.name = "Switch_%d" % id
-    var shape = CollisionShape2D.new()
-    var circle = CircleShape2D.new()
-    circle.radius = 28
-    shape.shape = circle
-    area.add_child(shape)
-    parent.add_child(area)
-    area.connect("body_entered", self, "_on_level_switch_body_entered", [id, label_text])
-
-func _create_level_barrier(parent, pos, label_text):
-    var body = StaticBody2D.new()
-    body.position = pos
-    body.name = "Barrier_%s" % label_text
-    var shape = CollisionShape2D.new()
-    var rect = RectangleShape2D.new()
-    rect.extents = Vector2(14, 65)
-    shape.shape = rect
-    body.add_child(shape)
-    parent.add_child(body)
-
-func _create_level_mover(parent, pos, distance):
-    var body = KinematicBody2D.new()
-    body.position = pos
-    body.name = "MovingObstacle"
-    body.set_meta("start_x", pos.x)
-    body.set_meta("distance", distance)
-    body.set_meta("phase", 0.0)
-    var shape = CollisionShape2D.new()
-    var rect = RectangleShape2D.new()
-    rect.extents = Vector2(55, 12)
-    shape.shape = rect
-    body.add_child(shape)
-    parent.add_child(body)
-
-func _on_level_switch_body_entered(body, id, label_text):
-    if body != get_node_or_null("Stikman") or dialogue_active:
-        return
-    get_node("HUD/Message").text = "%s ACTIVADO" % label_text
-    _save_game()
-
 func _build_level_objects():
     var items = level_hazards[clamp(world1_level - 1, 0, level_hazards.size() - 1)]
     var player = get_node_or_null("Stikman")
@@ -1860,10 +1819,13 @@ func _start_world1_level(level_number):
 func _restart_from_checkpoint():
     world1_level = checkpoint_level
     world1_mode = true
+    world1_level_completed = false
+    _rebuild_level_geometry()
     var player = get_node_or_null("Stikman")
     if player != null:
         player.position = checkpoint_position
         player.velocity = Vector2.ZERO
+        player.set_physics_process(true)
     health = 3
     game_over = false
     paused = false
