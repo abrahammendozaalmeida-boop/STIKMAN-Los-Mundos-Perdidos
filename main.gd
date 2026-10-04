@@ -36,6 +36,11 @@ var world1_mystery_clue_collected = false
 var world1_mystery_clue_position = Vector2(2635, 220)
 var world1_mystery_destination_found = false
 var world1_mystery_destination_position = Vector2(3150, 285)
+var world1_underground_mode = false
+var world1_underground_lever_activated = false
+var world1_underground_generator_activated = false
+var world1_underground_gate_body = null
+var world1_underground_gate_shape = null
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -86,6 +91,7 @@ func _ready():
     _create_exit()
     _create_world1_door()
     _create_world1_platform()
+    _create_world1_underground_zone()
     _update_ui()
     update()
 
@@ -96,6 +102,7 @@ func _process(delta):
         _check_world1_rooftop()
         _check_world1_mystery_clue()
         _check_world1_mystery_destination()
+        _check_world1_underground()
     if not game_over and not finished and not dialogue_active:
         elapsed += delta
         if message_timer > 0:
@@ -366,6 +373,72 @@ func _check_world1_interactions():
         _update_ui()
         update()
 
+func _check_world1_underground():
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+
+    if world1_mystery_destination_found and not world1_underground_mode and player.position.distance_to(world1_mystery_destination_position) < 75:
+        world1_underground_mode = true
+        player.position = Vector2(3800, 350)
+        player.velocity = Vector2.ZERO
+        var camera = player.get_node_or_null("Camera2D")
+        if camera != null:
+            camera.limit_right = 4700
+        message_timer = 2.5
+        _start_dialogue("STIKMAN", [
+            "El conducto baja hasta aqui.",
+            "La energia de la ciudad llega a una maquina subterranea.",
+            "Hay una palanca, una compuerta y un generador.",
+            "Si alguien desvio la energia, aqui debe estar la respuesta."
+        ])
+        update()
+        return
+
+    if not world1_underground_mode:
+        return
+
+    if not world1_underground_lever_activated and player.position.distance_to(Vector2(4100, 350)) < 70:
+        world1_underground_lever_activated = true
+        if world1_underground_gate_shape != null:
+            world1_underground_gate_shape.disabled = true
+        message_timer = 2.0
+        _start_dialogue("STIKMAN", [
+            "La palanca sigue conectada al sistema.",
+            "La compuerta se abrio.",
+            "Ahora puedo llegar hasta el generador."
+        ])
+        update()
+        return
+
+    if world1_underground_lever_activated and not world1_underground_generator_activated and player.position.distance_to(Vector2(4500, 350)) < 80:
+        world1_underground_generator_activated = true
+        message_timer = 4.0
+        _start_dialogue("STIKMAN", [
+            "Este es el punto donde terminaba la energia.",
+            "La maquina no estaba fallando: estaba desviandola.",
+            "Hay una ruta de energia que sale de aqui y sigue hacia otro lugar.",
+            "Ahora ya se donde empezar a buscar."
+        ])
+        update()
+        return
+
+    if world1_underground_generator_activated and player.position.distance_to(Vector2(3800, 350)) < 70:
+        world1_underground_mode = false
+        player.position = Vector2(3150, 350)
+        player.velocity = Vector2.ZERO
+        var camera = player.get_node_or_null("Camera2D")
+        if camera != null:
+            camera.limit_right = 3600
+        message_timer = 3.0
+        _start_dialogue("STIKMAN", [
+            "Ya se donde termina el conducto.",
+            "Pero la energia sigue viajando hacia otro sitio.",
+            "La ciudad no fue el objetivo... solo fue el comienzo.",
+            "Tengo que seguir la nueva ruta."
+        ])
+        update()
+
 func _check_world1_mystery_destination():
     var player = get_node_or_null("Stikman")
     if player == null or not world1_mystery_clue_collected or world1_mystery_destination_found:
@@ -554,6 +627,9 @@ func _draw():
         draw_circle(p, 5, Color("#fff1a8"))
 
 func _draw_world1():
+    if world1_underground_mode:
+        _draw_world1_underground()
+        return
     draw_rect(Rect2(0, 0, 3600, 540), Color("#7fc8f2"))
     draw_circle(Vector2(720, 85), 55, Color("#fff1a8"))
 
@@ -677,6 +753,39 @@ func _draw_world1():
         draw_line(p + Vector2(-38, -38), p + Vector2(38, 38), Color("#ff5a5a"), 8)
         draw_line(p + Vector2(38, -38), p + Vector2(-38, 38), Color("#ff5a5a"), 8)
 
+func _draw_world1_underground():
+    draw_rect(Rect2(3600, 0, 1100, 540), Color("#10171d"))
+    draw_rect(Rect2(3600, 0, 1100, 430), Color("#18242b"))
+    draw_rect(Rect2(3550, 430, 1200, 110), Color("#252b30"))
+    draw_rect(Rect2(3550, 430, 1200, 10), Color("#3f6874"))
+    draw_rect(Rect2(3970, 380, 260, 20), Color("#394b53"))
+    draw_rect(Rect2(3970, 380, 260, 5), Color("#56e0ff"))
+
+    draw_rect(Rect2(3760, 300, 80, 130), Color("#26343b"))
+    draw_rect(Rect2(3775, 315, 50, 115), Color("#0a0f12"))
+    draw_circle(Vector2(3800, 350), 9, Color("#56e0ff"))
+
+    draw_line(Vector2(4100, 355), Vector2(4100, 315), Color("#777f84"), 8)
+    draw_circle(Vector2(4100, 310), 13, Color("#56e0ff") if world1_underground_lever_activated else Color("#ffbd45"))
+    draw_string(Control.new().get_theme_default_font(), Vector2(4040, 280), "PALANCA", Color("#d8fbff"))
+
+    if world1_underground_lever_activated:
+        draw_rect(Rect2(4302, 285, 36, 105), Color(0.25, 0.8, 0.65, 0.25))
+    else:
+        draw_rect(Rect2(4302, 285, 36, 105), Color("#59636b"))
+        draw_rect(Rect2(4308, 292, 24, 90), Color("#7a8388"))
+
+    draw_rect(Rect2(4440, 300, 120, 100), Color("#303a40"))
+    draw_rect(Rect2(4455, 315, 90, 70), Color("#1a242a"))
+    draw_circle(Vector2(4500, 350), 24, Color("#7dffe8") if world1_underground_generator_activated else Color("#4e6670"))
+    draw_circle(Vector2(4500, 350), 10, Color("#ffffff") if world1_underground_generator_activated else Color("#263b45"))
+    draw_line(Vector2(4500, 300), Vector2(4500, 255), Color("#56e0ff"), 5)
+    draw_line(Vector2(4500, 255), Vector2(4630, 210), Color("#56e0ff"), 5)
+    draw_arc(Vector2(4630, 210), 18 + sin(elapsed * 4) * 3, 0, PI * 2, 20, Color("#d8fbff"), 3)
+
+    draw_string(Control.new().get_theme_default_font(), Vector2(3710, 470), "CONDUCTO SUBTERRANEO", Color("#8daab5"))
+    draw_string(Control.new().get_theme_default_font(), Vector2(4380, 470), "ENERGIA DESVIADA", Color("#56e0ff"))
+
 func _create_hazards():
     for i in range(hazard_positions.size()):
         var area = Area2D.new()
@@ -728,6 +837,37 @@ func _sync_world1_platform_collision():
         return
     world1_platform_body.position = Vector2(world1_platform_x, 309)
     world1_platform_shape.disabled = not world1_platform_unlocked
+
+func _create_world1_underground_zone():
+    var ground = StaticBody2D.new()
+    ground.name = "UndergroundGround"
+    ground.position = Vector2(4150, 500)
+    var ground_shape = CollisionShape2D.new()
+    var ground_rect = RectangleShape2D.new()
+    ground_rect.extents = Vector2(600, 40)
+    ground_shape.shape = ground_rect
+    ground.add_child(ground_shape)
+    add_child(ground)
+
+    var upper = StaticBody2D.new()
+    upper.name = "UndergroundUpperPlatform"
+    upper.position = Vector2(4100, 390)
+    var upper_shape = CollisionShape2D.new()
+    var upper_rect = RectangleShape2D.new()
+    upper_rect.extents = Vector2(130, 10)
+    upper_shape.shape = upper_rect
+    upper.add_child(upper_shape)
+    add_child(upper)
+
+    world1_underground_gate_body = StaticBody2D.new()
+    world1_underground_gate_body.name = "UndergroundGate"
+    world1_underground_gate_body.position = Vector2(4320, 390)
+    world1_underground_gate_shape = CollisionShape2D.new()
+    var gate_rect = RectangleShape2D.new()
+    gate_rect.extents = Vector2(18, 110)
+    world1_underground_gate_shape.shape = gate_rect
+    world1_underground_gate_body.add_child(world1_underground_gate_shape)
+    add_child(world1_underground_gate_body)
 
 func _create_world1_door():
     world1_door_body = StaticBody2D.new()
@@ -830,7 +970,7 @@ func _update_ui():
         return
 
     hud.get_node("Title").text = "STIKMAN - LOS MUNDOS PERDIDOS"
-    hud.get_node("World").text = "MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA"
+    hud.get_node("World").text = "MUNDO 1: CONDUCTO SUBTERRANEO" if world1_underground_mode else ("MUNDO 1: MUNDO NORMAL" if world1_mode else "PROLOGO: LA SELVA")
     if world1_mode:
         var activated_count = 0
         for activated in world1_terminal_activated:
@@ -856,6 +996,13 @@ func _update_ui():
             hud.get_node("Message").text = "PORTAL BLOQUEADO\n¡DERROTA AL GUARDIAN PRIMERO!"
         else:
             hud.get_node("Message").text = "¡GUARDIAN DERROTADO!"
+    elif world1_underground_mode:
+        if not world1_underground_lever_activated:
+            hud.get_node("Message").text = "ENCUENTRA LA PALANCA\nABRE LA COMPUERTA"
+        elif not world1_underground_generator_activated:
+            hud.get_node("Message").text = "COMPUERTA ABIERTA\nLLEGA AL GENERADOR"
+        else:
+            hud.get_node("Message").text = "RUTA DESCUBIERTA\nREGRESA A LA ENTRADA"
     elif world1_mode:
         if world1_ready and not world1_key_collected:
             hud.get_node("Message").text = "¡LOS NODOS ESTAN ACTIVOS!\nBUSCA LA LLAVE"
