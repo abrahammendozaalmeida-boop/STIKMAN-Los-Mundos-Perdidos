@@ -198,6 +198,10 @@ var level_start_dialogues = [
 ]
 var save_path = "user://stikman_save.json"
 var settings_fullscreen = false
+var jungle_ground_texture = null
+var jungle_bark_texture = null
+var jungle_rock_texture = null
+var jungle_leaves_texture = null
 var outfit_id = 0
 var owned_outfits = [true, false, false, false]
 var outfit_names = ["Clasico", "Azul", "Rojo", "Explorador"]
@@ -225,6 +229,10 @@ var coin_positions = [
 ]
 
 func _ready():
+    jungle_ground_texture = load("res://assets/textures/jungle/ground.svg")
+    jungle_bark_texture = load("res://assets/textures/jungle/bark.svg")
+    jungle_rock_texture = load("res://assets/textures/jungle/rock.svg")
+    jungle_leaves_texture = load("res://assets/textures/jungle/leaves.svg")
     _create_dialogue_ui()
     var title_label = get_node_or_null("HUD/Title")
     if title_label != null:
@@ -1271,8 +1279,11 @@ func _draw():
         draw_rect(Rect2(bx, 275, 18, 155), Color("#193c2c"))
         draw_circle(Vector2(bx + 9, 245), 48, Color("#1b4931"))
 
-    # Suelo con capas, piedras y pequenas variaciones.
-    draw_rect(Rect2(0, 430, 3600, 110), Color("#302217"))
+    # Suelo con textura personalizada ligera, sin shaders.
+    if jungle_ground_texture != null:
+        draw_texture_rect(jungle_ground_texture, Rect2(0, 430, 3600, 110), true, Color(1, 1, 1, 0.96))
+    else:
+        draw_rect(Rect2(0, 430, 3600, 110), Color("#302217"))
     draw_rect(Rect2(0, 430, 3600, 10), Color("#52763b"))
     draw_line(Vector2(0, 448), Vector2(3600, 448), Color("#46321f"), 3)
     for x in range(40, 3600, 170):
@@ -1284,7 +1295,10 @@ func _draw():
     for x in range(60, 3600, 230):
         var offset = sin(float(x) * 0.03) * 35
         var trunk_x = float(x) + offset
-        draw_rect(Rect2(trunk_x, 245, 28, 185), Color("#241811"))
+        if jungle_bark_texture != null:
+            draw_texture_rect(jungle_bark_texture, Rect2(trunk_x, 245, 28, 185), true, Color(0.9, 0.9, 0.9, 1.0))
+        else:
+            draw_rect(Rect2(trunk_x, 245, 28, 185), Color("#241811"))
         draw_rect(Rect2(trunk_x + 7, 255, 8, 175), Color("#49301d"))
         draw_line(Vector2(trunk_x + 14, 310), Vector2(trunk_x - 28, 275), Color("#2b1b13"), 9)
         draw_line(Vector2(trunk_x + 14, 330), Vector2(trunk_x + 55, 290), Color("#2b1b13"), 8)
@@ -1301,10 +1315,16 @@ func _draw():
         draw_line(Vector2(fx, 418), Vector2(fx - 34, 408), Color("#4b8240"), 5)
         draw_line(Vector2(fx, 414), Vector2(fx + 36, 404), Color("#477b3d"), 5)
 
-    draw_circle(Vector2(360, 414), 25, Color("#51493f"))
-    draw_circle(Vector2(520, 420), 18, Color("#665b4b"))
-    draw_circle(Vector2(1600, 414), 24, Color("#51493f"))
-    draw_circle(Vector2(2050, 417), 20, Color("#62584a"))
+    if jungle_rock_texture != null:
+        draw_texture_rect(jungle_rock_texture, Rect2(335, 389, 50, 40), true, Color(0.82, 0.82, 0.78, 1.0))
+        draw_texture_rect(jungle_rock_texture, Rect2(502, 401, 36, 28), true, Color(0.82, 0.82, 0.78, 1.0))
+        draw_texture_rect(jungle_rock_texture, Rect2(1575, 389, 50, 40), true, Color(0.82, 0.82, 0.78, 1.0))
+        draw_texture_rect(jungle_rock_texture, Rect2(2028, 397, 44, 32), true, Color(0.82, 0.82, 0.78, 1.0))
+    else:
+        draw_circle(Vector2(360, 414), 25, Color("#51493f"))
+        draw_circle(Vector2(520, 420), 18, Color("#665b4b"))
+        draw_circle(Vector2(1600, 414), 24, Color("#51493f"))
+        draw_circle(Vector2(2050, 417), 20, Color("#62584a"))
     draw_rect(Rect2(1110, 390, 110, 28), Color("#50301c"))
     draw_rect(Rect2(2630, 397, 125, 26), Color("#50301c"))
 
