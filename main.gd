@@ -94,6 +94,29 @@ var level_select_unlocked = 1
 var checkpoint_message_timer = 0.0
 var auto_save_timer = 0.0
 var level_start_positions = [Vector2(220,350),Vector2(520,350),Vector2(850,350),Vector2(1180,350),Vector2(1500,350),Vector2(1800,350),Vector2(2100,350),Vector2(2400,350),Vector2(2700,350),Vector2(3000,350),Vector2(3150,350),Vector2(3800,350),Vector2(4050,350),Vector2(4250,350),Vector2(220,350),Vector2(850,350),Vector2(1500,350),Vector2(2100,350),Vector2(2750,350),Vector2(3300,350)]
+var level_hazards = [
+    ["Señal de energia", "Barrera baja", "Tuberia rota"],
+    ["Cable electrico", "Vagon abandonado", "Anden roto"],
+    ["Vapor", "Compuerta", "Vias bloqueadas"],
+    ["Contenedor", "Grúa detenida", "Puente roto"],
+    ["Puerta de seguridad", "Laser de mantenimiento", "Ascensor"],
+    ["Charco electrico", "Generador", "Cables sueltos"],
+    ["Interruptor", "Ventilador industrial", "Plataforma movil"],
+    ["Caja metalica", "Prensa apagada", "Rampa"],
+    ["Plataforma movil", "Cristal roto", "Salto entre edificios"],
+    ["Señal desconocida", "Campo de energia", "Torre de control"],
+    ["Conducto", "Ventilacion", "Tuberia"],
+    ["Generador", "Compuerta pesada", "Pasarela"],
+    ["Maquina desviadora", "Piston", "Campo magnetico"],
+    ["Ruta de energia", "Puente suspendido", "Compuerta"],
+    ["Alarma", "Barrera automatica", "Torreta de vigilancia"],
+    ["Rastro de energia", "Puertas automaticas", "Zona inestable"],
+    ["Persecucion", "Obstaculos moviles", "Pasarela colapsada"],
+    ["Entrada final", "Puerta blindada", "Zona de peligro"],
+    ["Antesala", "Mecanismos antiguos", "Plataformas elevadas"],
+    ["Arena del guardian", "Nucleo de energia", "Plataformas de combate"]
+]
+
 var level_layouts = [
     [[420,460,240,18],[760,400,180,18],[1080,350,200,18]],
     [[500,430,160,18],[720,330,180,18],[1010,450,220,18],[1320,360,180,18]],
@@ -221,7 +244,8 @@ func _process(delta):
         auto_save_timer += delta
         if auto_save_timer >= 20.0:
             auto_save_timer = 0.0
-            _save_game()
+            _build_level_objects()
+    _save_game()
         if checkpoint_message_timer > 0.0:
             checkpoint_message_timer -= delta
     if not game_started:
@@ -1531,6 +1555,16 @@ func _on_exit_body_entered(body):
 func _show_level_intro(level_number):
     var index = clamp(level_number - 1, 0, level_start_dialogues.size() - 1)
     _start_dialogue("NIVEL %d • %s" % [level_number, world1_level_titles[index]], level_start_dialogues[index])
+
+func _build_level_objects():
+    var items = level_hazards[clamp(world1_level - 1, 0, level_hazards.size() - 1)]
+    var player = get_node_or_null("Stikman")
+    if player == null:
+        return
+    # El HUD muestra los elementos propios de la zona para que cada nivel
+    # tenga identidad y objetivo visual distinto.
+    if has_node("HUD/Message") and not dialogue_active:
+        get_node("HUD/Message").text = "%s  •  %s  •  %s" % [items[0], items[1], items[2]]
 
 func _build_parkour_geometry():
     var layout = level_layouts[clamp(world1_level - 1, 0, level_layouts.size() - 1)]
