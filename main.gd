@@ -157,12 +157,19 @@ func _draw():
         draw_line(Vector2(enemy_x - 12, 375), Vector2(enemy_x - 20, 410), Color("#2a1b17"), 9)
         draw_line(Vector2(enemy_x + 12, 375), Vector2(enemy_x + 20, 410), Color("#2a1b17"), 9)
 
-    # Portal final
+    # Portal final: permanece bloqueado mientras el Guardian siga vivo
     var portal_center = Vector2(3180, 350)
-    draw_circle(portal_center, 72, Color(0.2, 0.7, 0.95, 0.15))
-    draw_arc(portal_center, 58, 0, PI * 2, 48, Color("#71d8ff"), 8)
-    draw_arc(portal_center, 42, 0, PI * 2, 48, Color("#c6f3ff"), 4)
-    draw_circle(portal_center, 8, Color("#ffffff"))
+    if enemy_alive:
+        draw_circle(portal_center, 72, Color(0.35, 0.12, 0.12, 0.18))
+        draw_arc(portal_center, 58, 0, PI * 2, 48, Color("#8b3d3d"), 8)
+        draw_arc(portal_center, 42, 0, PI * 2, 48, Color("#d06a6a"), 4)
+        draw_line(Vector2(3140, 310), Vector2(3220, 390), Color("#ff5a5a"), 8)
+        draw_line(Vector2(3220, 310), Vector2(3140, 390), Color("#ff5a5a"), 8)
+    else:
+        draw_circle(portal_center, 72, Color(0.2, 0.7, 0.95, 0.15))
+        draw_arc(portal_center, 58, 0, PI * 2, 48, Color("#71d8ff"), 8)
+        draw_arc(portal_center, 42, 0, PI * 2, 48, Color("#c6f3ff"), 4)
+        draw_circle(portal_center, 8, Color("#ffffff"))
 
     # Indicadores decorativos
     for p in coin_positions:
@@ -247,6 +254,11 @@ func _on_exit_body_entered(body):
     if body.name != "Stikman" or game_over:
         return
 
+    if enemy_alive:
+        message_timer = 2.0
+        _update_ui()
+        return
+
     finished = true
     body.set_physics_process(false)
     _update_ui()
@@ -266,10 +278,10 @@ func _update_ui():
     elif finished:
         hud.get_node("Message").text = "¡HAS ENCONTRADO EL PORTAL!\nMUNDO 1: MUNDO NORMAL DESBLOQUEADO"
     elif message_timer > 0:
-        if not enemy_alive:
-            hud.get_node("Message").text = "¡ENEMIGO DERROTADO!"
+        if enemy_alive:
+            hud.get_node("Message").text = "PORTAL BLOQUEADO\n¡DERROTA AL GUARDIAN PRIMERO!"
         else:
-            hud.get_node("Message").text = "¡CUIDADO!\nPerdiste una vida"
+            hud.get_node("Message").text = "¡ENEMIGO DERROTADO!"
     elif enemy_alive:
         hud.get_node("Message").text = "¡ENEMIGO ADELANTE!  Pulsa J para atacar"
     else:
