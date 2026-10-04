@@ -362,14 +362,15 @@ func _show_main_menu():
     menu_title.text = "STIKMAN"
     menu_info.text = "LOS MUNDOS PERDIDOS\nMonedas: %d" % coins
     if save_exists:
-        _add_menu_button("CONTINUAR PARTIDA", "_menu_continue", 145)
+        _add_menu_button("CONTINUAR PARTIDA", "_menu_continue", 135)
+        _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 185)
     else:
         _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 145)
-    _add_menu_button("SELECCIONAR NIVEL", "_menu_level_select", 195)
-    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 245)
-    _add_menu_button("TIENDA", "_menu_shop", 295)
-    _add_menu_button("AJUSTES", "_menu_settings", 345)
-    _add_menu_button("SALIR", "_menu_exit", 395)
+    _add_menu_button("SELECCIONAR NIVEL", "_menu_level_select", 235)
+    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 285)
+    _add_menu_button("TIENDA", "_menu_shop", 335)
+    _add_menu_button("AJUSTES", "_menu_settings", 385)
+    _add_menu_button("SALIR", "_menu_exit", 435)
 
 func _start_game():
     game_started = true
@@ -686,8 +687,10 @@ func _reset_game_state():
     checkpoint_world = 1
     level_select_unlocked = 1
     checkpoint_position = Vector2(180, 430)
+    # Una partida nueva siempre comienza en la selva/prologo.
     world1_mode = false
     world1_ready = false
+    world1_level = 1
     world1_items = 0
     world1_signal_collected = [false, false, false]
     world1_terminal_activated = [false, false, false]
