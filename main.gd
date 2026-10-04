@@ -1711,12 +1711,16 @@ func _rebuild_level_geometry():
     update()
 
 func _clear_level_geometry():
+    # Liberacion inmediata: evita que al cambiar/reaparecer se queden
+    # plataformas o interactivos invisibles duplicados del nivel anterior.
     var parkour = get_node_or_null("LevelParkour")
     if parkour != null:
-        parkour.queue_free()
+        remove_child(parkour)
+        parkour.free()
     var interactives = get_node_or_null("LevelInteractives")
     if interactives != null:
-        interactives.queue_free()
+        remove_child(interactives)
+        interactives.free()
 
 func _reset_level_interactive_state():
     world1_switch_activated = false
