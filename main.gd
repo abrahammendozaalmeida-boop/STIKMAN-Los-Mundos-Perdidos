@@ -21,6 +21,7 @@ var world1_door_x = 2350.0
 var world1_switch_position = Vector2(2900, 350)
 var world1_box_position = Vector2(1800, 390)
 var world1_box_moved = false
+var world1_box_dialogue_shown = false
 var world1_platform_x = 2550.0
 var world1_platform_direction = 1.0
 var world1_platform_speed = 70.0
@@ -522,7 +523,8 @@ func _update_world1_environment(delta):
                 world1_box_body.position = world1_box_position
             if not world1_box_moved:
                 world1_box_moved = true
-            if not dialogue_active and world1_box_moved:
+            if not dialogue_active and not world1_box_dialogue_shown:
+                world1_box_dialogue_shown = true
                 _start_dialogue("STIKMAN", [
                     "Esta caja se puede mover...",
                     "¿Por que alguien dejaria esto justo aqui?",
