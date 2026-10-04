@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://main.gd" type="Script" id=1]
 [ext_resource path="res://stikman.gd" type="Script" id=2]
@@ -20,18 +20,6 @@ position = Vector2(1800, 485)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Suelo"]
 shape = SubResource(2)
-
-[node name="Obstaculo1" type="StaticBody2D" parent="."]
-position = Vector2(1165, 408)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Obstaculo1"]
-shape = SubResource(3)
-
-[node name="Obstaculo2" type="StaticBody2D" parent="."]
-position = Vector2(2690, 410)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Obstaculo2"]
-shape = SubResource(3)
 
 [node name="Stikman" type="KinematicBody2D" parent="."]
 position = Vector2(180, 430)
