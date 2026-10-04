@@ -414,7 +414,9 @@ func _show_game_over_menu():
     var player = get_node_or_null("Stikman")
     if player != null:
         player.velocity = Vector2.ZERO
-        player.set_physics_process(false)
+        # El jugador se detiene durante el dialogo, pero vuelve a recibir
+        # fisica inmediatamente al cerrarlo.
+        player.set_physics_process(true)
     _clear_menu_buttons()
     menu_panel.visible = true
     menu_title.text = "HAS CAIDO"
