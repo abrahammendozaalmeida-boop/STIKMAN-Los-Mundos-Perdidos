@@ -1308,6 +1308,11 @@ func _draw():
         draw_circle(Vector2(trunk_x + 12, 188), 38, Color("#316b3d"))
 
     # Vegetacion de primer plano: hojas, helechos y rocas.
+    if jungle_leaves_texture != null:
+        draw_texture_rect(jungle_leaves_texture, Rect2(0, 330, 900, 105), true, Color(1, 1, 1, 0.42))
+        draw_texture_rect(jungle_leaves_texture, Rect2(900, 315, 1050, 120), true, Color(1, 1, 1, 0.34))
+        draw_texture_rect(jungle_leaves_texture, Rect2(1950, 325, 1050, 110), true, Color(1, 1, 1, 0.38))
+        draw_texture_rect(jungle_leaves_texture, Rect2(3000, 315, 600, 120), true, Color(1, 1, 1, 0.34))
     for x in range(110, 3600, 280):
         var fx = float(x) + sin(float(x) * 0.04) * 18.0
         draw_line(Vector2(fx, 430), Vector2(fx - 22, 397), Color("#315c32"), 7)
