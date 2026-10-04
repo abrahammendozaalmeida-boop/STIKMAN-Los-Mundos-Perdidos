@@ -78,6 +78,22 @@ var dialogue_char_speed = 0.025
 var dialogue_can_advance = false
 var dialogue_title = ""
 
+# Sistema general de juego: guardado, menus, pausa y personalizacion
+var game_started = false
+var paused = false
+var menu_layer = null
+var menu_panel = null
+var menu_title = null
+var menu_info = null
+var menu_buttons = []
+var save_exists = false
+var save_path = "user://stikman_save.json"
+var settings_fullscreen = false
+var outfit_id = 0
+var owned_outfits = [true, false, false, false]
+var outfit_names = ["Clasico", "Azul", "Rojo", "Explorador"]
+var outfit_costs = [0, 25, 50, 75]
+
 var hazard_positions = [
     Vector2(930, 412),
     Vector2(1370, 412),
@@ -99,7 +115,6 @@ var coin_positions = [
 
 func _ready():
     _create_dialogue_ui()
-    _start_prologue_dialogue()
     _create_hazards()
     _create_coins()
     _create_exit()
@@ -107,11 +122,17 @@ func _ready():
     _create_world1_platform()
     _create_world1_box()
     _create_world1_underground_zone()
+    _load_save()
+    _create_menu_ui()
+    _show_main_menu()
     _update_ui()
     update()
 
 func _process(delta):
     _update_dialogue(delta)
+    if not game_started:
+        update()
+        return
     if world1_mode and not dialogue_active:
         _update_world1_environment(delta)
         _check_world1_rooftop()
@@ -138,6 +159,337 @@ func _process(delta):
             _check_attack()
             _check_enemy_contact()
         _update_ui()
+    update()
+
+
+func _notification(what):
+    if what == NOTIFICATION_WM_QUIT_REQUEST:
+        _save_game()
+        get_tree().quit()
+
+func _input(event):
+    if event is InputEventKey and event.pressed and not event.echo and event.scancode == KEY_ESCAPE:
+        if not game_started:
+            return
+        if dialogue_active:
+            return
+        if paused:
+            _hide_pause_menu()
+        else:
+            _show_pause_menu()
+
+func _create_menu_ui():
+    menu_layer = CanvasLayer.new()
+    menu_layer.name = "MenuLayer"
+    add_child(menu_layer)
+
+    menu_panel = Panel.new()
+    menu_panel.name = "MenuPanel"
+    menu_panel.rect_position = Vector2(250, 55)
+    menu_panel.rect_size = Vector2(460, 430)
+    menu_layer.add_child(menu_panel)
+
+    menu_title = Label.new()
+    menu_title.rect_position = Vector2(35, 25)
+    menu_title.rect_size = Vector2(390, 45)
+    menu_title.align = Label.ALIGN_CENTER
+    menu_title.add_color_override("font_color", Color("#55dfff"))
+    menu_title.add_font_override("font", ThemeDB.fallback_font)
+    menu_panel.add_child(menu_title)
+
+    menu_info = Label.new()
+    menu_info.rect_position = Vector2(45, 75)
+    menu_info.rect_size = Vector2(370, 55)
+    menu_info.align = Label.ALIGN_CENTER
+    menu_info.autowrap = true
+    menu_panel.add_child(menu_info)
+
+func _clear_menu_buttons():
+    for button in menu_buttons:
+        if is_instance_valid(button):
+            button.queue_free()
+    menu_buttons.clear()
+
+func _add_menu_button(text_value, callback_name, y):
+    var button = Button.new()
+    button.text = text_value
+    button.rect_position = Vector2(75, y)
+    button.rect_size = Vector2(310, 42)
+    button.connect("pressed", self, callback_name)
+    menu_panel.add_child(button)
+    menu_buttons.append(button)
+
+func _show_main_menu():
+    paused = false
+    game_started = false
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.set_physics_process(false)
+    _clear_menu_buttons()
+    menu_panel.visible = true
+    menu_title.text = "STIKMAN"
+    menu_info.text = "LOS MUNDOS PERDIDOS\nMonedas: %d" % coins
+    if save_exists:
+        _add_menu_button("CONTINUAR PARTIDA", "_menu_continue", 145)
+    else:
+        _add_menu_button("NUEVA PARTIDA", "_menu_new_game", 145)
+    _add_menu_button("PERSONALIZAR STIKMAN", "_menu_customize", 195)
+    _add_menu_button("TIENDA", "_menu_shop", 245)
+    _add_menu_button("AJUSTES", "_menu_settings", 295)
+    _add_menu_button("SALIR", "_menu_exit", 345)
+
+func _start_game():
+    game_started = true
+    paused = false
+    menu_panel.visible = false
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.set_physics_process(true)
+    if not world1_mode and not world1_ready and elapsed <= 0.1:
+        _start_prologue_dialogue()
+    _update_ui()
+    update()
+
+func _menu_continue():
+    _load_save()
+    _start_game()
+    if world1_mode:
+        _start_dialogue("STIKMAN", [
+            "Ya recuerdo donde me quede.",
+            "La pista sigue justo desde aqui.",
+            "Tengo que continuar."
+        ])
+
+func _menu_new_game():
+    _reset_game_state()
+    _delete_save()
+    _start_game()
+
+func _show_pause_menu():
+    paused = true
+    _save_game()
+    _clear_menu_buttons()
+    menu_panel.visible = true
+    menu_title.text = "PAUSA"
+    menu_info.text = "Tu progreso se guardo automaticamente.\nNivel: %d/20  •  Monedas: %d" % [world1_level, coins]
+    _add_menu_button("CONTINUAR", "_hide_pause_menu", 145)
+    _add_menu_button("GUARDAR PARTIDA", "_menu_save", 195)
+    _add_menu_button("PERSONALIZAR", "_menu_customize", 245)
+    _add_menu_button("TIENDA", "_menu_shop", 295)
+    _add_menu_button("AJUSTES", "_menu_settings", 345)
+    _add_menu_button("MENU PRINCIPAL", "_menu_main_from_pause", 395)
+
+func _hide_pause_menu():
+    paused = false
+    menu_panel.visible = false
+    _clear_menu_buttons()
+
+func _menu_main_from_pause():
+    _save_game()
+    _show_main_menu()
+
+func _menu_save():
+    _save_game()
+    menu_info.text = "PARTIDA GUARDADA\nPuedes salir con tranquilidad."
+    
+func _menu_customize():
+    _clear_menu_buttons()
+    menu_title.text = "PERSONALIZAR STIKMAN"
+    menu_info.text = "Elige una apariencia desbloqueada."
+    for i in range(outfit_names.size()):
+        var label = "%s%s" % [outfit_names[i], "  ✓" if i == outfit_id else ""]
+        if not owned_outfits[i]:
+            label += "  • %d monedas" % outfit_costs[i]
+        _add_menu_button(label, "_select_outfit_%d" % i, 125 + i * 55)
+    _add_menu_button("VOLVER", "_menu_back", 355)
+
+func _select_outfit_0(): _select_outfit(0)
+func _select_outfit_1(): _select_outfit(1)
+func _select_outfit_2(): _select_outfit(2)
+func _select_outfit_3(): _select_outfit(3)
+
+func _select_outfit(index):
+    if not owned_outfits[index]:
+        if coins < outfit_costs[index]:
+            menu_info.text = "No tienes suficientes monedas."
+            return
+        coins -= outfit_costs[index]
+        owned_outfits[index] = true
+    outfit_id = index
+    _save_game()
+    _apply_outfit()
+    _menu_customize()
+
+func _apply_outfit():
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.outfit_id = outfit_id
+        player.update()
+
+func _menu_shop():
+    _clear_menu_buttons()
+    menu_title.text = "TIENDA"
+    menu_info.text = "Monedas: %d\nDesbloquea ropa y apariencias." % coins
+    for i in range(1, outfit_names.size()):
+        var label = "%s  •  %d monedas" % [outfit_names[i], outfit_costs[i]]
+        if owned_outfits[i]:
+            label = "%s  •  COMPRADO" % outfit_names[i]
+        _add_menu_button(label, "_shop_buy_%d" % i, 125 + (i - 1) * 65)
+    _add_menu_button("VOLVER", "_menu_back", 345)
+
+func _shop_buy_1(): _select_outfit(1)
+func _shop_buy_2(): _select_outfit(2)
+func _shop_buy_3(): _select_outfit(3)
+
+func _menu_settings():
+    _clear_menu_buttons()
+    menu_title.text = "AJUSTES"
+    menu_info.text = "Opciones básicas del juego."
+    _add_menu_button("PANTALLA COMPLETA: " + ("SI" if settings_fullscreen else "NO"), "_toggle_fullscreen", 145)
+    _add_menu_button("BORRAR PARTIDA GUARDADA", "_menu_delete_save", 200)
+    _add_menu_button("VOLVER", "_menu_back", 270)
+
+func _toggle_fullscreen():
+    settings_fullscreen = not settings_fullscreen
+    OS.window_fullscreen = settings_fullscreen
+    _save_game()
+    _menu_settings()
+
+func _menu_delete_save():
+    _delete_save()
+    _reset_game_state()
+    menu_info.text = "Partida eliminada. Puedes iniciar una nueva."
+    _show_main_menu()
+
+func _menu_back():
+    if paused:
+        _show_pause_menu()
+    else:
+        _show_main_menu()
+
+func _menu_exit():
+    _save_game()
+    get_tree().quit()
+
+func _save_game():
+    var file = File.new()
+    var data = {
+        "world1_level": world1_level,
+        "world1_mode": world1_mode,
+        "coins": coins,
+        "outfit_id": outfit_id,
+        "owned_outfits": owned_outfits,
+        "elapsed": elapsed,
+        "world1_signal_collected": world1_signal_collected,
+        "world1_terminal_activated": world1_terminal_activated,
+        "world1_ready": world1_ready,
+        "world1_key_collected": world1_key_collected,
+        "world1_door_open": world1_door_open,
+        "world1_switch_activated": world1_switch_activated,
+        "world1_box_position_x": world1_box_position.x,
+        "world1_box_moved": world1_box_moved,
+        "world1_box_on_switch": world1_box_on_switch,
+        "world1_secret_gate_open": world1_secret_gate_open,
+        "world1_platform_unlocked": world1_platform_unlocked,
+        "world1_rooftop_discovered": world1_rooftop_discovered,
+        "world1_mystery_signal_found": world1_mystery_signal_found,
+        "world1_mystery_clue_collected": world1_mystery_clue_collected,
+        "world1_mystery_destination_found": world1_mystery_destination_found,
+        "world1_underground_lever_activated": world1_underground_lever_activated,
+        "world1_underground_generator_activated": world1_underground_generator_activated
+    }
+    if file.open(save_path, File.WRITE) == OK:
+        file.store_string(JSON.print(data))
+        file.close()
+        save_exists = true
+
+func _load_save():
+    var file = File.new()
+    if not file.file_exists(save_path):
+        save_exists = false
+        return
+    if file.open(save_path, File.READ) != OK:
+        return
+    var parsed = parse_json(file.get_as_text())
+    file.close()
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    save_exists = true
+    world1_level = clamp(int(parsed.get("world1_level", 1)), 1, world1_level_count)
+    world1_mode = bool(parsed.get("world1_mode", false))
+    coins = max(0, int(parsed.get("coins", 0)))
+    outfit_id = clamp(int(parsed.get("outfit_id", 0)), 0, 3)
+    var saved_outfits = parsed.get("owned_outfits", owned_outfits)
+    if typeof(saved_outfits) == TYPE_ARRAY and saved_outfits.size() == owned_outfits.size():
+        owned_outfits = saved_outfits
+    elapsed = max(0.0, float(parsed.get("elapsed", 0.0)))
+    world1_signal_collected = parsed.get("world1_signal_collected", world1_signal_collected)
+    world1_terminal_activated = parsed.get("world1_terminal_activated", world1_terminal_activated)
+    world1_ready = bool(parsed.get("world1_ready", world1_ready))
+    world1_key_collected = bool(parsed.get("world1_key_collected", false))
+    world1_door_open = bool(parsed.get("world1_door_open", false))
+    world1_switch_activated = bool(parsed.get("world1_switch_activated", false))
+    world1_box_position.x = float(parsed.get("world1_box_position_x", world1_box_position.x))
+    world1_box_moved = bool(parsed.get("world1_box_moved", false))
+    world1_box_on_switch = bool(parsed.get("world1_box_on_switch", false))
+    world1_secret_gate_open = bool(parsed.get("world1_secret_gate_open", false))
+    world1_platform_unlocked = bool(parsed.get("world1_platform_unlocked", false))
+    world1_rooftop_discovered = bool(parsed.get("world1_rooftop_discovered", false))
+    world1_mystery_signal_found = bool(parsed.get("world1_mystery_signal_found", false))
+    world1_mystery_clue_collected = bool(parsed.get("world1_mystery_clue_collected", false))
+    world1_mystery_destination_found = bool(parsed.get("world1_mystery_destination_found", false))
+    world1_underground_lever_activated = bool(parsed.get("world1_underground_lever_activated", false))
+    world1_underground_generator_activated = bool(parsed.get("world1_underground_generator_activated", false))
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        if world1_mode:
+            player.position = Vector2(220, 350)
+        player.velocity = Vector2.ZERO
+    _apply_outfit()
+
+func _delete_save():
+    var file = File.new()
+    if file.file_exists(save_path):
+        file.remove(save_path)
+    save_exists = false
+
+func _reset_game_state():
+    coins = 0
+    health = 3
+    game_over = false
+    finished = false
+    elapsed = 0.0
+    world1_level = 1
+    world1_mode = false
+    world1_ready = false
+    world1_items = 0
+    world1_signal_collected = [false, false, false]
+    world1_terminal_activated = [false, false, false]
+    world1_door_open = false
+    world1_key_collected = false
+    world1_switch_activated = false
+    world1_box_position = Vector2(1800, 390)
+    world1_box_moved = false
+    world1_box_on_switch = false
+    world1_secret_gate_open = false
+    world1_platform_unlocked = false
+    world1_rooftop_discovered = false
+    world1_mystery_signal_found = false
+    world1_mystery_clue_collected = false
+    world1_mystery_destination_found = false
+    world1_underground_mode = false
+    world1_underground_lever_activated = false
+    world1_underground_generator_activated = false
+    enemy_alive = true
+    guardian_hits = 0
+    outfit_id = 0
+    owned_outfits = [true, false, false, false]
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = Vector2(180, 430)
+        player.velocity = Vector2.ZERO
+    _apply_outfit()
+    _update_ui()
     update()
 
 func _create_dialogue_ui():
