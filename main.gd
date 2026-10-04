@@ -91,6 +91,9 @@ var checkpoint_position = Vector2(180, 430)
 var checkpoint_level = 1
 var checkpoint_world = 1
 var level_select_unlocked = 1
+var checkpoint_message_timer = 0.0
+var auto_save_timer = 0.0
+var level_start_positions = [Vector2(220,350),Vector2(520,350),Vector2(850,350),Vector2(1180,350),Vector2(1500,350),Vector2(1800,350),Vector2(2100,350),Vector2(2400,350),Vector2(2700,350),Vector2(3000,350),Vector2(3150,350),Vector2(3800,350),Vector2(4050,350),Vector2(4250,350),Vector2(220,350),Vector2(850,350),Vector2(1500,350),Vector2(2100,350),Vector2(2750,350),Vector2(3300,350)]
 var save_path = "user://stikman_save.json"
 var settings_fullscreen = false
 var outfit_id = 0
@@ -134,6 +137,13 @@ func _ready():
 
 func _process(delta):
     _update_dialogue(delta)
+    if game_started and not paused:
+        auto_save_timer += delta
+        if auto_save_timer >= 20.0:
+            auto_save_timer = 0.0
+            _save_game()
+        if checkpoint_message_timer > 0.0:
+            checkpoint_message_timer -= delta
     if not game_started:
         update()
         return
@@ -734,6 +744,8 @@ func _set_checkpoint(position_value):
     checkpoint_world = 1
     if level_select_unlocked < world1_level:
         level_select_unlocked = world1_level
+    checkpoint_message_timer = 2.5
+    auto_save_timer = 0.0
     _save_game()
 
 func _complete_world1_level(next_position):
@@ -1436,6 +1448,52 @@ func _on_exit_body_entered(body):
     body.set_physics_process(false)
     _update_ui()
 
+func _start_world1_level(level_number):
+    world1_level = clamp(level_number, 1, world1_level_count)
+    world1_mode = true
+    world1_ready = false
+    world1_items = 0
+    world1_signal_collected = [false, false, false]
+    world1_terminal_activated = [false, false, false]
+    world1_key_collected = false
+    world1_door_open = false
+    world1_switch_activated = false
+    world1_box_moved = false
+    world1_box_on_switch = false
+    world1_secret_gate_open = false
+    world1_platform_unlocked = false
+    world1_rooftop_discovered = false
+    world1_mystery_signal_found = false
+    world1_mystery_clue_collected = false
+    world1_mystery_destination_found = false
+    world1_underground_mode = false
+    world1_underground_lever_activated = false
+    world1_underground_generator_activated = false
+    checkpoint_position = level_start_positions[world1_level - 1]
+    checkpoint_level = world1_level
+    checkpoint_world = 1
+    level_select_unlocked = max(level_select_unlocked, world1_level)
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = checkpoint_position
+        player.velocity = Vector2.ZERO
+    _save_game()
+    _update_ui()
+    update()
+
+func _restart_from_checkpoint():
+    var player = get_node_or_null("Stikman")
+    if player != null:
+        player.position = checkpoint_position
+        player.velocity = Vector2.ZERO
+    health = 3
+    game_over = false
+    paused = false
+    menu_panel.visible = false
+    checkpoint_message_timer = 2.0
+    _update_ui()
+    update()
+
 func _update_ui():
     var hud = get_node_or_null("HUD")
     if hud == null:
@@ -1455,7 +1513,9 @@ func _update_ui():
     if world1_mode and world1_level_completed:
         hud.get_node("Message").text = "NIVEL %d COMPLETADO\nPREPARANDO LA SIGUIENTE PARTE DE LA HISTORIA" % world1_level
 
-    if game_over:
+    if checkpoint_message_timer > 0.0:
+        hud.get_node("Message").text = "CHECKPOINT GUARDADO\nNivel %d" % checkpoint_level
+    elif game_over:
         hud.get_node("Message").text = "HAS CAIDO EN LA SELVA\nPulsa F5 para volver a intentarlo"
     elif finished:
         hud.get_node("Message").text = "¡MUNDO 2 DESBLOQUEADO!\nCONTINUA TU AVENTURA"
