@@ -94,6 +94,29 @@ var level_select_unlocked = 1
 var checkpoint_message_timer = 0.0
 var auto_save_timer = 0.0
 var level_start_positions = [Vector2(220,350),Vector2(520,350),Vector2(850,350),Vector2(1180,350),Vector2(1500,350),Vector2(1800,350),Vector2(2100,350),Vector2(2400,350),Vector2(2700,350),Vector2(3000,350),Vector2(3150,350),Vector2(3800,350),Vector2(4050,350),Vector2(4250,350),Vector2(220,350),Vector2(850,350),Vector2(1500,350),Vector2(2100,350),Vector2(2750,350),Vector2(3300,350)]
+var level_objectives = [
+    "Encuentra la primera señal de energia.",
+    "Lleva la señal hasta su nodo.",
+    "Enciende la estacion apagada.",
+    "Encuentra una forma de despejar el camino.",
+    "Encuentra el mecanismo de la puerta.",
+    "Encuentra la llave perdida.",
+    "Activa el interruptor.",
+    "Mueve la caja hasta descubrir el mecanismo.",
+    "Activa y cruza con la plataforma.",
+    "Encuentra la señal desconocida.",
+    "Sigue el conducto subterraneo.",
+    "Encuentra el control de la instalacion.",
+    "Deten el desvio de energia.",
+    "Sigue la ruta oculta.",
+    "Reactiva el sistema de seguridad.",
+    "Sigue el rastro de energia.",
+    "Escapa de la persecucion.",
+    "Alcanza la entrada final.",
+    "Cruza la antesala.",
+    "Derrota al guardian de la ciudad."
+]
+
 var level_start_dialogues = [
 ["La ciudad esta vacia.", "Hay algo que no encaja aqui.", "Tengo que encontrar una señal."],
 ["La señal me trajo hasta aqui.", "El camino continua.", "Debo seguir la energia."],
@@ -158,6 +181,7 @@ func _ready():
     update()
 
 func _process(delta):
+    _check_level_completion()
     _update_dialogue(delta)
     if game_started and not paused:
         auto_save_timer += delta
