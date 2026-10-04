@@ -24,6 +24,8 @@ var world1_box_moved = false
 var world1_platform_x = 2550.0
 var world1_platform_direction = 1.0
 var world1_platform_speed = 70.0
+var world1_box_on_switch = false
+var world1_secret_gate_open = false
 var world1_door_body = null
 var world1_door_shape = null
 var elapsed = 0.0
@@ -355,7 +357,7 @@ func _update_world1_environment(delta):
     if player == null:
         return
 
-    # Caja empujable: al tocarla lateralmente, avanza poco a poco.
+    # Caja empujable: sirve para mantener presionado un interruptor.
     if not world1_box_moved:
         if abs(player.position.x - world1_box_position.x) < 48 and abs(player.position.y - 350) < 90:
             if player.position.x < world1_box_position.x:
@@ -368,6 +370,20 @@ func _update_world1_environment(delta):
                     "Esta caja se puede mover...",
                     "¿Por que alguien dejaria esto justo aqui?",
                     "Tal vez este bloqueando algo."
+                ])
+            update()
+    
+    # La caja debe quedar sobre la placa para abrir el paso secreto.
+    var switch_plate = Vector2(1960, 410)
+    if world1_box_moved and world1_box_position.distance_to(switch_plate) < 55:
+        if not world1_box_on_switch:
+            world1_box_on_switch = true
+            world1_secret_gate_open = true
+            if not dialogue_active:
+                _start_dialogue("STIKMAN", [
+                    "¡Escuche algo!",
+                    "La caja activo una placa oculta.",
+                    "El camino acaba de cambiar..."
                 ])
             update()
 
@@ -537,14 +553,19 @@ func _draw_world1():
     else:
         draw_rect(Rect2(world1_door_x - 6, 250, 12, 180), Color(0.25, 0.8, 0.65, 0.35))
 
-    # Camino secreto: aparece al activar el interruptor.
-    if world1_switch_activated:
+    # Camino secreto: puede abrirse por el puzzle de la caja.
+    if world1_secret_gate_open:
         draw_rect(Rect2(2760, 365, 300, 34), Color("#244e5b"))
         draw_rect(Rect2(2760, 365, 300, 6), Color("#56e0ff"))
         for x in range(2790, 3060, 45):
             draw_circle(Vector2(x, 382), 5, Color("#b9f8ff"))
     else:
         draw_rect(Rect2(2760, 365, 300, 34), Color("#30343a"))
+
+    # Puzzle de la caja y placa.
+    var switch_plate = Vector2(1960, 410)
+    draw_rect(Rect2(switch_plate.x - 45, 402, 90, 12), Color("#56e0ff") if world1_box_on_switch else Color("#555b60"))
+    draw_circle(switch_plate, 8, Color("#d8fbff") if world1_box_on_switch else Color("#777d82"))
 
     # Objetos interactivos del escenario.
     draw_rect(Rect2(world1_box_position.x - 38, 352, 76, 48), Color("#9b6a3d"))
